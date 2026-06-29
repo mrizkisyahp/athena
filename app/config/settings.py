@@ -7,6 +7,10 @@ class Settings(BaseSettings):
 
     openrouter_api_key: str = ""
 
+    llm_api_key: str = ""
+    llm_base_url: str = ""
+    llm_model: str = ""
+
     model_config = SettingsConfigDict(
         env_file=".env",
         extra="ignore",
