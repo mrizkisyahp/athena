@@ -43,4 +43,7 @@ class LLMClient:
             ],
         )
 
+        if not response.choices:
+            raise RuntimeError(f"LLM returned an invalid or empty response: {response}")
+
         return response.choices[0].message.content or ""

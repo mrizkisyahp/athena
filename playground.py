@@ -1,25 +1,20 @@
 import asyncio
 
+from app.departments.communication.service import CommunicationDepartment
 from app.integrations.llm import LLMClient
-from app.schemas.chat import ChatMessage, ChatRequest
 
 
 async def main():
-
     llm = LLMClient()
 
-    request = ChatRequest(
-        messages=[
-            ChatMessage(
-                role="user",
-                content="Reply with exactly: Athena is online.",
-            )
-        ]
-    )
+    communication = CommunicationDepartment(llm)
 
-    response = await llm.generate(request)
+    response = await communication.chat(
+        "Introduce yourself as Athena in one sentence."
+    )
 
     print(response)
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
