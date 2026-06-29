@@ -3,6 +3,7 @@ from typing import Final
 from openai import AsyncOpenAI
 
 from app.config.settings import settings
+from app.schemas.chat import ChatRequest
 
 
 class LLMClient:
@@ -23,38 +24,23 @@ class LLMClient:
     """
 
 
-    def __init__(self) -> None:
-        self._client: Final = AsyncOpenAI(
+    def __init__(self):
+        self.client = AsyncOpenAI(
             api_key=settings.llm_api_key,
             base_url=settings.llm_base_url,
         )
 
     async def generate(
         self,
-        prompt: str,
-        *,
-        model: str | None = None,
+        request: ChatRequest,
     ) -> str:
-        """
-        Generate a response from the configured LLM.
-        """
 
-        response = await self._client.chat.completions.create(
-            model=model or settings.llm_model,
+        response = await self.client.chat.completions.create(
+            model=request.model or settings.llm_model,
             messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
+                message.model_dump()
+                for message in request.messages
             ],
         )
 
-        content = response.choices[0].message.content
-
-        if not content:
-            raise RuntimeError("LLM returned an empty response.")
-
-        return content
-
-
-llm_client = LLMClient()
+        return response.choices[0].message.content or ""
