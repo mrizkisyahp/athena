@@ -5,6 +5,7 @@ from openai import AsyncOpenAI
 from app.config.settings import settings
 from app.schemas.chat import ChatRequest
 from app.services.prompt_service import PromptService
+from app.logging.logger import logger
 
 
 class LLMClient:
@@ -54,5 +55,12 @@ class LLMClient:
 
         if not response.choices:
             raise RuntimeError(f"LLM returned an invalid or empty response: {response}")
+
+        logger.info(
+            "LLM request completed",
+            model=request.model or settings.llm_model,
+            prompt_tokens=response.usage.prompt_tokens if response.usage else 0,
+            completion_tokens=response.usage.completion_tokens if response.usage else 0,
+        )
 
         return response.choices[0].message.content or ""

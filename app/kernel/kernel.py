@@ -1,4 +1,5 @@
 from app.departments.communication.service import CommunicationDepartment
+from app.logging.logger import logger
 
 
 class AthenaKernel:
@@ -16,4 +17,9 @@ class AthenaKernel:
         self.communication = communication
 
     async def chat(self, message: str) -> str:
+        logger.info(
+            "Kernel received chat request",
+            message_length=len(message),
+        )
+        
         return await self.communication.chat(message)

@@ -5,16 +5,12 @@ from app.departments.communication.service import CommunicationDepartment
 from app.integrations.llm import LLMClient
 from app.kernel.kernel import AthenaKernel
 from app.schemas.chat import ChatRequest
+from app.bootstrap.container import container
 
 app = FastAPI(
     title=settings.app_name,
     version="0.1.0",
 )
-
-# Bootstrap Athena
-llm = LLMClient()
-communication = CommunicationDepartment(llm)
-athena = AthenaKernel(communication)
 
 @app.get("/")
 def root():
@@ -38,7 +34,7 @@ async def chat(request: ChatRequest):
     """
     user_message = request.messages[-1].content
 
-    reply = await athena.chat(user_message)
+    reply = await container.kernel.chat(user_message)
 
     return {
         "reply": reply,
