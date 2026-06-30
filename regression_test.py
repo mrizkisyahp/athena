@@ -6,6 +6,18 @@ url = "http://127.0.0.1:8000"
 
 def run_tests():
     with httpx.Client(timeout=120.0) as client:
+        print("0. Testing POST /projects")
+        r = client.post(f"{url}/projects", json={"name": f"Regression Project {datetime.datetime.now().timestamp()}"})
+        assert r.status_code == 200, f"POST /projects failed: {r.text}"
+        project_id = r.json()["id"]
+        print("[PASS] Project creation works")
+        
+        print("0.1 Testing GET /projects")
+        r = client.get(f"{url}/projects")
+        assert r.status_code == 200, "GET /projects failed"
+        assert any(p["id"] == project_id for p in r.json()), "Project not found in list"
+        print("[PASS] Project listing works")
+
         print("1. Testing POST /chat")
         r = client.post(f"{url}/chat", json={"messages": [{"role": "user", "content": "Hello Athena!"}]})
         assert r.status_code == 200, "POST /chat failed"
@@ -39,6 +51,15 @@ def run_tests():
         assert completed_task["status"] == "completed", "Task status did not change to completed"
         assert completed_task["completed_at"] is not None, "completed_at was not populated"
         print("[PASS] Complete task works")
+        
+        print("4.1 Testing GET /projects/{id}")
+        r = client.get(f"{url}/projects/{project_id}")
+        assert r.status_code == 200, "GET /projects/{id} failed"
+        data = r.json()
+        assert "project" in data
+        assert "progress" in data
+        assert "responsibilities" in data
+        print("[PASS] Project overview works")
 
         print("5. Testing GET /today")
         r = client.get(f"{url}/today")
@@ -51,8 +72,13 @@ def run_tests():
         r = client.get(f"{url}/daily-briefing")
         assert r.status_code == 200, "GET /daily-briefing failed"
         print("[PASS] Daily Briefing works")
+        
+        print("7. Testing POST /advisor")
+        r = client.post(f"{url}/advisor", json={"question": "Can I game tonight?"})
+        assert r.status_code == 200, "POST /advisor failed"
+        print("[PASS] Advisor works")
 
-        print("\nALL TESTS PASSED! PostgreSQL regression testing successful.")
+        print("\nALL TESTS PASSED! Sprint 6 regression testing successful.")
 
 if __name__ == "__main__":
     run_tests()
