@@ -21,10 +21,14 @@ class BriefingService:
 
     async def generate_daily_briefing(self) -> str:
         today = self._responsibilities.get_due_today()
+        high_priority = self._responsibilities.get_high_priority_today()
         overdue = self._responsibilities.get_overdue()
         completed = self._responsibilities.get_completed_today()
 
         context = f"""
+High priority responsibilities today:
+{self._format_tasks(high_priority)}
+
 Today's responsibilities:
 {self._format_tasks(today)}
 

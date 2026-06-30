@@ -11,31 +11,32 @@ async def main():
     service = ResponsibilityService()
     now = TimeService.now()
 
-    # Overdue
+    # LOW
     service.add(
         Responsibility(
-            title="Thesis proposal",
-            priority=ResponsibilityPriority.MEDIUM,
-            due_date=now - timedelta(days=1),
+            title="Buy milk",
+            priority=ResponsibilityPriority.LOW,
+            due_date=now,
         )
     )
 
-    # Due today
+    # HIGH
     service.add(
         Responsibility(
-            title="Upload employee report",
+            title="Employee report",
             priority=ResponsibilityPriority.HIGH,
             due_date=now,
         )
     )
 
-    # Completed today
-    completed = Responsibility(
-        title="Check emails",
-        status=ResponsibilityStatus.COMPLETED,
-        completed_at=now,
+    # CRITICAL
+    service.add(
+        Responsibility(
+            title="Final thesis submission",
+            priority=ResponsibilityPriority.CRITICAL,
+            due_date=now,
+        )
     )
-    service.add(completed)
 
     llm = LLMClient()
     prompts = PromptService()
@@ -47,7 +48,9 @@ async def main():
     )
 
     response = await briefing_service.generate_daily_briefing()
-    print(response)
+    
+    # Encode and decode to avoid Windows cp1252 print errors with emojis
+    print(response.encode("utf-8", "replace").decode("utf-8", "replace"))
 
 if __name__ == "__main__":
     asyncio.run(main())

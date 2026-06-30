@@ -77,6 +77,20 @@ class ResponsibilityService:
             )
         ]
 
+    def get_high_priority_today(self) -> list[Responsibility]:
+        """
+        Returns today's HIGH and CRITICAL responsibilities.
+        """
+
+        return [
+            responsibility
+            for responsibility in self.get_due_today()
+            if responsibility.priority in (
+                ResponsibilityPriority.HIGH,
+                ResponsibilityPriority.CRITICAL,
+            )
+        ]
+
     def get_overdue(self) -> list[Responsibility]:
         """
         Returns all incomplete overdue responsibilities.
