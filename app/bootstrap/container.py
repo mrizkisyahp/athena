@@ -9,6 +9,8 @@ from app.advisors.router import QuestionRouter
 from app.advisors.service import AdvisorService
 
 from app.projects.service import ProjectService
+from app.planning.service import ExecutionPlanner
+from app.planning.planning_service import PlanningService
 
 class AthenaContainer:
     """
@@ -25,9 +27,16 @@ class AthenaContainer:
 
         self.responsibilities = ResponsibilityService()
         self.projects = ProjectService()
+        self.planner = ExecutionPlanner(self.responsibilities)
 
         self.briefing = BriefingService(
             responsibilities=self.responsibilities,
+            llm=self.llm,
+            prompts=self.prompt_service,
+        )
+
+        self.planning_service = PlanningService(
+            planner=self.planner,
             llm=self.llm,
             prompts=self.prompt_service,
         )

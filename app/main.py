@@ -197,3 +197,16 @@ async def get_project(project_id: str):
             to_task_response(r) for r in responsibilities
         ]
     )
+
+from app.schemas.planning import ExecutionPlanResponse
+
+@app.get(
+    "/execution-plan",
+    response_model=ExecutionPlanResponse,
+)
+async def execution_plan():
+    plan = await container.planning_service.generate_plan()
+
+    return ExecutionPlanResponse(
+        plan=plan
+    )
