@@ -111,3 +111,9 @@ async def today():
             for task in service.get_completed_today()
         ],
     )
+
+@app.get("/daily-briefing")
+async def daily_briefing():
+    return {
+        "briefing": await container.briefing.generate_daily_briefing()
+    }
