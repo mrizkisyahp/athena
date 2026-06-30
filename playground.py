@@ -1,7 +1,11 @@
+import asyncio
 from datetime import timedelta
 from app.planning.service import ExecutionPlanner
+from app.planning.planning_service import PlanningService
 from app.responsibilities.models import Responsibility, ResponsibilityPriority
 from app.services.time_service import TimeService
+from app.integrations.llm import LLMClient
+from app.services.prompt_service import PromptService
 
 class MockResponsibilityService:
     def __init__(self):
@@ -13,34 +17,27 @@ class MockResponsibilityService:
     def get_all(self):
         return self._responsibilities
 
-def main():
+async def main():
     service = MockResponsibilityService()
     now = TimeService.now()
     today = now.replace(hour=23, minute=59, second=59)
     tomorrow = today + timedelta(days=1)
-    yesterday = now - timedelta(days=1)
 
-    r1 = Responsibility(title="High Tomorrow", priority=ResponsibilityPriority.HIGH, due_date=tomorrow)
-    r2 = Responsibility(title="Critical Today", priority=ResponsibilityPriority.CRITICAL, due_date=today)
-    r3 = Responsibility(title="Low Overdue", priority=ResponsibilityPriority.LOW, due_date=yesterday)
-    r4 = Responsibility(title="Medium Today", priority=ResponsibilityPriority.MEDIUM, due_date=today)
+    r1 = Responsibility(title="Finish Sprint 7", priority=ResponsibilityPriority.CRITICAL, due_date=today)
+    r2 = Responsibility(title="Review thesis", priority=ResponsibilityPriority.HIGH, due_date=tomorrow)
 
     service.add(r1)
     service.add(r2)
-    service.add(r3)
-    service.add(r4)
 
     planner = ExecutionPlanner(service)
-    plan = planner.generate_plan()
-
-    for idx, r in enumerate(plan.responsibilities, 1):
-        if r.due_date and r.due_date < now:
-            status = "Overdue"
-        elif r.due_date == today:
-            status = "Today"
-        else:
-            status = "Tomorrow"
-        print(f"{idx}. {r.title} [{r.priority.name}] ({status})")
+    llm = LLMClient()
+    prompts = PromptService()
+    
+    planning_service = PlanningService(planner, llm, prompts)
+    response = await planning_service.generate_plan()
+    
+    print("Athena:")
+    print(response)
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
