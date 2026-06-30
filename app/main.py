@@ -128,6 +128,7 @@ async def daily_briefing():
     }
 
 from app.schemas.advisor import AdvisorRequest, AdvisorResponse
+from app.schemas.capacity import CapacityAdvisorRequest, CapacityAdvisorResponse
 
 @app.post(
     "/advisor",
@@ -141,6 +142,21 @@ async def advisor(
     )
 
     return AdvisorResponse(
+        answer=answer
+    )
+
+@app.post(
+    "/advisor/capacity",
+    response_model=CapacityAdvisorResponse,
+)
+async def capacity_advisor(
+    request: CapacityAdvisorRequest,
+):
+    answer = await container.advisor_service.advise(
+        request.question
+    )
+
+    return CapacityAdvisorResponse(
         answer=answer
     )
 

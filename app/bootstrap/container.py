@@ -42,7 +42,14 @@ class AthenaContainer:
         )
 
         self.availability_advisor = AvailabilityAdvisor(self.responsibilities)
-        self.question_router = QuestionRouter([self.availability_advisor])
+        from app.advisors.capacity import CapacityAdvisor
+        self.capacity_advisor = CapacityAdvisor(self.planner)
+        
+        self.question_router = QuestionRouter([
+            self.availability_advisor,
+            self.capacity_advisor
+        ])
+        
         self.advisor_service = AdvisorService(
             router=self.question_router,
             llm=self.llm,
