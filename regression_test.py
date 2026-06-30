@@ -6,13 +6,18 @@ url = "http://127.0.0.1:8000"
 
 def run_tests():
     with httpx.Client(timeout=120.0) as client:
-        print("0. Testing POST /projects")
+        print("0. Testing GET /execution-plan (Initial State)")
+        r = client.get(f"{url}/execution-plan")
+        assert r.status_code == 200, f"GET /execution-plan failed: {r.text}"
+        print("[PASS] Execution plan initial state works")
+
+        print("0.1 Testing POST /projects")
         r = client.post(f"{url}/projects", json={"name": f"Regression Project {datetime.datetime.now().timestamp()}"})
         assert r.status_code == 200, f"POST /projects failed: {r.text}"
         project_id = r.json()["id"]
         print("[PASS] Project creation works")
         
-        print("0.1 Testing GET /projects")
+        print("0.2 Testing GET /projects")
         r = client.get(f"{url}/projects")
         assert r.status_code == 200, "GET /projects failed"
         assert any(p["id"] == project_id for p in r.json()), "Project not found in list"
@@ -32,6 +37,14 @@ def run_tests():
         })
         assert r.status_code == 200, "POST /tasks failed"
         task_id = r.json()["id"]
+        
+        # Create a second task to test sorting
+        r2 = client.post(f"{url}/tasks", json={
+            "title": "Regression Test Task 2",
+            "priority": "low"
+        })
+        assert r2.status_code == 200, "POST /tasks failed"
+        
         print("[PASS] Task creation works")
 
         print("3. Testing GET /tasks")
@@ -78,7 +91,12 @@ def run_tests():
         assert r.status_code == 200, "POST /advisor failed"
         print("[PASS] Advisor works")
 
-        print("\nALL TESTS PASSED! Sprint 6 regression testing successful.")
+        print("8. Testing GET /execution-plan (Populated State)")
+        r = client.get(f"{url}/execution-plan")
+        assert r.status_code == 200, f"GET /execution-plan failed: {r.text}"
+        print("[PASS] Execution plan populated state works")
+
+        print("\nALL TESTS PASSED! Sprint 7 regression testing successful.")
 
 if __name__ == "__main__":
     run_tests()
