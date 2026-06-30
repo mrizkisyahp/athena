@@ -1,5 +1,6 @@
 from app.projects.models import Project
-
+from app.responsibilities.service import ResponsibilityService
+from app.responsibilities.models import Responsibility
 
 class ProjectService:
     """
@@ -31,3 +32,14 @@ class ProjectService:
                 return project
 
         return None
+
+    def get_responsibilities(
+        self,
+        project_id: str,
+        responsibility_service: ResponsibilityService,
+    ) -> list[Responsibility]:
+        return [
+            responsibility
+            for responsibility in responsibility_service.get_all()
+            if responsibility.project_id == project_id
+        ]

@@ -40,3 +40,5 @@ class Responsibility:
     created_at: datetime = field(default_factory=TimeService.now)
 
     completed_at: datetime | None = None
+
+    project_id: str | None = None
