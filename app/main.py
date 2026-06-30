@@ -13,6 +13,7 @@ from app.schemas.task import (
 from app.schemas.common import SuccessResponse
 from app.schemas.mappers import to_task_response
 from app.schemas.today import TodayResponse
+from app.time.duration import Duration
 
 app = FastAPI(
     title=settings.app_name,
@@ -49,15 +50,23 @@ async def chat(request: ChatRequest):
 
 @app.post("/tasks", response_model=TaskResponse)
 async def create_task(request: CreateTaskRequest):
-
-    responsibility = container.responsibilities.create(
+    duration = None
+    if request.estimated_duration_minutes is not None:
+        try:
+            duration = Duration(request.estimated_duration_minutes)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+            
+    task = container.responsibilities.create(
         title=request.title,
         description=request.description,
         priority=request.priority,
         due_date=request.due_date,
+        project_id=request.project_id,
+        estimated_duration=duration,
     )
 
-    return to_task_response(responsibility)
+    return to_task_response(task)
 
 @app.get("/tasks", response_model=list[TaskResponse])
 async def list_tasks():

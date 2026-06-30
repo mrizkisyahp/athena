@@ -6,6 +6,7 @@ from app.responsibilities.models import (
     ResponsibilityStatus,
     ResponsibilityPriority,
 )
+from app.time.duration import Duration
 from app.services.time_service import TimeService
 from app.database.session import SessionLocal
 from app.database.models import ResponsibilityORM
@@ -33,12 +34,16 @@ class ResponsibilityService:
         description: str = "",
         priority: ResponsibilityPriority = ResponsibilityPriority.MEDIUM,
         due_date: datetime | None = None,
+        project_id: str | None = None,
+        estimated_duration: Duration | None = None,
     ) -> Responsibility:
         responsibility = Responsibility(
             title=title,
             description=description,
             priority=priority,
             due_date=due_date,
+            project_id=project_id,
+            estimated_duration=estimated_duration,
         )
         self.add(responsibility)
         return responsibility

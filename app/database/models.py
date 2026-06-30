@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, String
+from sqlalchemy import DateTime, Enum, String, Integer
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from app.responsibilities.models import (
@@ -43,6 +43,8 @@ class ResponsibilityORM(Base):
     )
 
     project_id: Mapped[str | None] = mapped_column(String, nullable=True)
+
+    estimated_duration_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 class ProjectORM(Base):
     __tablename__ = "projects"

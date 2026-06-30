@@ -13,6 +13,8 @@ class CreateTaskRequest(BaseModel):
     description: str = ""
     priority: ResponsibilityPriority = ResponsibilityPriority.MEDIUM
     due_date: datetime | None = None
+    project_id: str | None = None
+    estimated_duration_minutes: int | None = None
 
 
 class TaskResponse(BaseModel):
@@ -24,3 +26,5 @@ class TaskResponse(BaseModel):
     due_date: datetime | None
     created_at: datetime
     completed_at: datetime | None
+    project_id: str | None = None
+    estimated_duration_minutes: int | None = None

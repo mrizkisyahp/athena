@@ -4,6 +4,7 @@ from enum import Enum
 from uuid import uuid4
 
 from app.services.time_service import TimeService
+from app.time.duration import Duration
 
 
 class ResponsibilityStatus(str, Enum):
@@ -42,3 +43,5 @@ class Responsibility:
     completed_at: datetime | None = None
 
     project_id: str | None = None
+
+    estimated_duration: Duration | None = None
