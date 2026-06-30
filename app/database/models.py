@@ -41,3 +41,18 @@ class ResponsibilityORM(Base):
     completed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True)
     )
+
+    project_id: Mapped[str | None] = mapped_column(String, nullable=True)
+
+class ProjectORM(Base):
+    __tablename__ = "projects"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+
+    name: Mapped[str] = mapped_column(String, unique=True, index=True)
+
+    description: Mapped[str] = mapped_column(String)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True)
+    )
