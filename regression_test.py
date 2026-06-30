@@ -33,7 +33,8 @@ def run_tests():
         r = client.post(f"{url}/tasks", json={
             "title": "Regression Test Task",
             "priority": "critical",
-            "due_date": now
+            "due_date": now,
+            "estimated_duration_minutes": 120
         })
         assert r.status_code == 200, "POST /tasks failed"
         task_id = r.json()["id"]
@@ -52,6 +53,8 @@ def run_tests():
         assert r.status_code == 200, "GET /tasks failed"
         tasks = r.json()
         assert any(t["id"] == task_id for t in tasks), "Newly created task not found in GET /tasks"
+        created_task = next(t for t in tasks if t["id"] == task_id)
+        assert created_task["estimated_duration_minutes"] == 120, "Estimated duration missing"
         print("[PASS] List tasks works")
 
         print("4. Testing PATCH /tasks/{id}/complete")
@@ -96,7 +99,12 @@ def run_tests():
         assert r.status_code == 200, f"GET /execution-plan failed: {r.text}"
         print("[PASS] Execution plan populated state works")
 
-        print("\nALL TESTS PASSED! Sprint 7 regression testing successful.")
+        print("9. Testing POST /advisor/capacity")
+        r = client.post(f"{url}/advisor/capacity", json={"question": "I have 5 hours today."})
+        assert r.status_code == 200, f"POST /advisor/capacity failed: {r.text}"
+        print("[PASS] Capacity advisor works")
+
+        print("\nALL TESTS PASSED! Sprint 8 regression testing successful.")
 
 if __name__ == "__main__":
     run_tests()
