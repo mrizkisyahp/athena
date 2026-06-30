@@ -1,11 +1,8 @@
 import asyncio
 from datetime import timedelta
 from app.planning.service import ExecutionPlanner
-from app.planning.planning_service import PlanningService
 from app.responsibilities.models import Responsibility, ResponsibilityPriority
 from app.services.time_service import TimeService
-from app.integrations.llm import LLMClient
-from app.services.prompt_service import PromptService
 
 class MockResponsibilityService:
     def __init__(self):
@@ -21,23 +18,27 @@ async def main():
     service = MockResponsibilityService()
     now = TimeService.now()
     today = now.replace(hour=23, minute=59, second=59)
-    tomorrow = today + timedelta(days=1)
 
-    r1 = Responsibility(title="Finish Sprint 7", priority=ResponsibilityPriority.CRITICAL, due_date=today)
-    r2 = Responsibility(title="Review thesis", priority=ResponsibilityPriority.HIGH, due_date=tomorrow)
+    r1 = Responsibility(title="Sprint 7", project_id="Athena", priority=ResponsibilityPriority.MEDIUM, due_date=today)
+    r2 = Responsibility(title="Review Paper", project_id="Thesis", priority=ResponsibilityPriority.MEDIUM, due_date=today)
+    r3 = Responsibility(title="Write Docs", project_id="Athena", priority=ResponsibilityPriority.MEDIUM, due_date=today)
+    r4 = Responsibility(title="Fix API", project_id="Athena", priority=ResponsibilityPriority.MEDIUM, due_date=today)
+
+    r1.created_at = now - timedelta(minutes=4)
+    r2.created_at = now - timedelta(minutes=3)
+    r3.created_at = now - timedelta(minutes=2)
+    r4.created_at = now - timedelta(minutes=1)
 
     service.add(r1)
     service.add(r2)
+    service.add(r3)
+    service.add(r4)
 
     planner = ExecutionPlanner(service)
-    llm = LLMClient()
-    prompts = PromptService()
+    plan = planner.generate_plan()
     
-    planning_service = PlanningService(planner, llm, prompts)
-    response = await planning_service.generate_plan()
-    
-    print("Athena:")
-    print(response)
+    for r in plan.responsibilities:
+        print(f"{r.title}")
 
 if __name__ == "__main__":
     asyncio.run(main())

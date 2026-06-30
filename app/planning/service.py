@@ -59,25 +59,79 @@ class ExecutionPlanner:
             sort_created,
         )
 
+    def _group_projects(self, ordered: list[Responsibility], now: datetime) -> list[Responsibility]:
+        if not ordered:
+            return []
+
+        result = []
+        
+        def get_tie_key(r: Responsibility) -> tuple:
+            return (
+                self._due_status(r, now),
+                _PRIORITY_ORDER.get(r.priority, 99),
+                r.due_date.timestamp() if r.due_date else float('inf')
+            )
+            
+        current_group = []
+        current_key = get_tie_key(ordered[0])
+        
+        for r in ordered:
+            key = get_tie_key(r)
+            if key == current_key:
+                current_group.append(r)
+            else:
+                result.extend(self._cluster_group(current_group))
+                current_group = [r]
+                current_key = key
+                
+        if current_group:
+            result.extend(self._cluster_group(current_group))
+            
+        return result
+
+    def _cluster_group(self, group: list[Responsibility]) -> list[Responsibility]:
+        placed = set()
+        clustered = []
+        
+        for i, r in enumerate(group):
+            if i in placed:
+                continue
+            
+            clustered.append(r)
+            placed.add(i)
+            
+            if r.project_id:
+                for j, other_r in enumerate(group[i+1:], start=i+1):
+                    if j not in placed and other_r.project_id == r.project_id:
+                        clustered.append(other_r)
+                        placed.add(j)
+                        
+        return clustered
+
     def generate_plan(self) -> ExecutionPlan:
         responsibilities = self._responsibility_service.get_all()
+        now = TimeService.now()
         
-        # Filter out completed tasks
         from app.responsibilities.models import ResponsibilityStatus
         pending = [
             r for r in responsibilities 
             if r.status != ResponsibilityStatus.COMPLETED
         ]
 
+        # Phase 1: Hard Constraints
         ordered = sorted(
             pending,
             key=self._sort_key,
         )
+        
+        # Phase 2: Optimization
+        ordered = self._group_projects(ordered, now)
 
         rationale = [
             "Overdue responsibilities are scheduled before future work.",
             "Higher-priority responsibilities are scheduled first.",
             "Earlier deadlines take precedence when priorities are equal.",
+            "Related work is grouped together when possible to reduce context switching.",
         ]
 
         return ExecutionPlan(
