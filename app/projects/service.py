@@ -1,6 +1,7 @@
 from app.projects.models import Project
+from app.projects.progress import ProjectProgress
 from app.responsibilities.service import ResponsibilityService
-from app.responsibilities.models import Responsibility
+from app.responsibilities.models import Responsibility, ResponsibilityStatus
 
 class ProjectService:
     """
@@ -43,3 +44,33 @@ class ProjectService:
             for responsibility in responsibility_service.get_all()
             if responsibility.project_id == project_id
         ]
+
+    def get_progress(
+        self,
+        project_id: str,
+        responsibility_service: ResponsibilityService,
+    ) -> ProjectProgress:
+        responsibilities = self.get_responsibilities(project_id, responsibility_service)
+        
+        total = len(responsibilities)
+        if total == 0:
+            return ProjectProgress(
+                total=0,
+                completed=0,
+                remaining=0,
+                percentage=0.0
+            )
+            
+        completed = sum(
+            1 for r in responsibilities 
+            if r.status == ResponsibilityStatus.COMPLETED
+        )
+        remaining = total - completed
+        percentage = (completed / total) * 100.0
+        
+        return ProjectProgress(
+            total=total,
+            completed=completed,
+            remaining=remaining,
+            percentage=percentage
+        )
