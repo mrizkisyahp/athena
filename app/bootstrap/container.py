@@ -8,6 +8,8 @@ from app.advisors.availability import AvailabilityAdvisor
 from app.advisors.router import QuestionRouter
 from app.advisors.service import AdvisorService
 
+from app.projects.service import ProjectService
+
 class AthenaContainer:
     """
     Responsible for constructing Athena.
@@ -22,6 +24,7 @@ class AthenaContainer:
         )
 
         self.responsibilities = ResponsibilityService()
+        self.projects = ProjectService()
 
         self.briefing = BriefingService(
             responsibilities=self.responsibilities,

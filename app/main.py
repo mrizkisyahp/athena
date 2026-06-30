@@ -134,3 +134,66 @@ async def advisor(
     return AdvisorResponse(
         answer=answer
     )
+
+from app.schemas.project import (
+    ProjectRequest,
+    ProjectResponse,
+    ProjectOverviewResponse,
+    ProjectProgressResponse
+)
+
+@app.post("/projects", response_model=ProjectResponse)
+async def create_project(request: ProjectRequest):
+    try:
+        project = container.projects.create(
+            name=request.name,
+            description=request.description,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+        
+    return ProjectResponse(
+        id=project.id,
+        name=project.name,
+        description=project.description,
+        created_at=project.created_at,
+    )
+
+@app.get("/projects", response_model=list[ProjectResponse])
+async def list_projects():
+    return [
+        ProjectResponse(
+            id=p.id,
+            name=p.name,
+            description=p.description,
+            created_at=p.created_at,
+        )
+        for p in container.projects.get_all()
+    ]
+
+@app.get("/projects/{project_id}", response_model=ProjectOverviewResponse)
+async def get_project(project_id: str):
+    project = container.projects.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found.")
+        
+    progress = container.projects.get_progress(project_id, container.responsibilities)
+    responsibilities = container.projects.get_responsibilities(project_id, container.responsibilities)
+    
+    return ProjectOverviewResponse(
+        project=ProjectResponse(
+            id=project.id,
+            name=project.name,
+            description=project.description,
+            created_at=project.created_at,
+        ),
+        progress=ProjectProgressResponse(
+            total=progress.total,
+            completed=progress.completed,
+            remaining=progress.remaining,
+            percentage=progress.percentage,
+        ),
+        responsibilities=[
+            to_task_response(r) for r in responsibilities
+        ]
+    )
