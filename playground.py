@@ -1,5 +1,7 @@
-from app.projects.service import ProjectService
-from app.responsibilities.models import Responsibility, ResponsibilityStatus
+from datetime import timedelta
+from app.planning.service import ExecutionPlanner
+from app.responsibilities.models import Responsibility, ResponsibilityPriority
+from app.services.time_service import TimeService
 
 class MockResponsibilityService:
     def __init__(self):
@@ -12,29 +14,33 @@ class MockResponsibilityService:
         return self._responsibilities
 
 def main():
-    project_service = ProjectService()
-    responsibility_service = MockResponsibilityService()
-    
-    # Create project Athena
-    athena = project_service.create("Athena")
-    
-    # Create Responsibilities
-    r1 = Responsibility(title="Sprint 5", project_id=athena.id, status=ResponsibilityStatus.COMPLETED)
-    r2 = Responsibility(title="Sprint 6", project_id=athena.id, status=ResponsibilityStatus.COMPLETED)
-    r3 = Responsibility(title="Sprint 7", project_id=athena.id, status=ResponsibilityStatus.IN_PROGRESS)
-    r4 = Responsibility(title="Sprint 8", project_id=athena.id, status=ResponsibilityStatus.TODO)
-    
-    responsibility_service.add(r1)
-    responsibility_service.add(r2)
-    responsibility_service.add(r3)
-    responsibility_service.add(r4)
-    
-    progress = project_service.get_progress(athena.id, responsibility_service)
-    print("Project Progress")
-    print(f"Total: {progress.total}")
-    print(f"Completed: {progress.completed}")
-    print(f"Remaining: {progress.remaining}")
-    print(f"Progress: {progress.percentage}%")
+    service = MockResponsibilityService()
+    now = TimeService.now()
+    today = now.replace(hour=23, minute=59, second=59)
+    tomorrow = today + timedelta(days=1)
+    yesterday = now - timedelta(days=1)
+
+    r1 = Responsibility(title="High Tomorrow", priority=ResponsibilityPriority.HIGH, due_date=tomorrow)
+    r2 = Responsibility(title="Critical Today", priority=ResponsibilityPriority.CRITICAL, due_date=today)
+    r3 = Responsibility(title="Low Overdue", priority=ResponsibilityPriority.LOW, due_date=yesterday)
+    r4 = Responsibility(title="Medium Today", priority=ResponsibilityPriority.MEDIUM, due_date=today)
+
+    service.add(r1)
+    service.add(r2)
+    service.add(r3)
+    service.add(r4)
+
+    planner = ExecutionPlanner(service)
+    plan = planner.generate_plan()
+
+    for idx, r in enumerate(plan.responsibilities, 1):
+        if r.due_date and r.due_date < now:
+            status = "Overdue"
+        elif r.due_date == today:
+            status = "Today"
+        else:
+            status = "Tomorrow"
+        print(f"{idx}. {r.title} [{r.priority.name}] ({status})")
 
 if __name__ == "__main__":
     main()
