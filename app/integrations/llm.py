@@ -12,17 +12,10 @@ class LLMClient:
     """
     Generic LLM client.
 
-    Athena never talks directly to OpenRouter.
+    Athena never talks directly to a specific provider.
     Athena talks to this abstraction.
 
-    Current provider:
-        OpenRouter
-
-    Future providers:
-        - OpenAI
-        - Anthropic
-        - Local LLM
-        - Other OpenAI-compatible APIs
+    It works with any OpenAI-compatible API (e.g. NVIDIA NIM, OpenRouter).
     """
 
 
@@ -51,6 +44,7 @@ class LLMClient:
                     for message in request.messages
                 ],
             ],
+            max_tokens=8192,
         )
 
         if not response.choices:

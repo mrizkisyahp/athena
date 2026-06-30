@@ -1,5 +1,6 @@
 from app.departments.communication.service import CommunicationDepartment
 from app.logging.logger import logger
+from app.responsibilities.service import ResponsibilityService
 
 
 class AthenaKernel:
@@ -13,8 +14,10 @@ class AthenaKernel:
     def __init__(
         self,
         communication: CommunicationDepartment,
+        responsibilities: ResponsibilityService,
     ):
         self.communication = communication
+        self.responsibilities = responsibilities
 
     async def chat(self, message: str) -> str:
         logger.info(
