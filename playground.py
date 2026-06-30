@@ -1,7 +1,7 @@
+from app.advisors.capacity import CapacityAdvisor
 from app.planning.service import ExecutionPlanner
 from app.responsibilities.models import Responsibility
 from app.time.duration import Duration
-from app.services.time_service import TimeService
 
 class MockResponsibilityService:
     def __init__(self):
@@ -13,29 +13,29 @@ class MockResponsibilityService:
     def get_all(self):
         return self._responsibilities
 
-def run_scenario(scenario_name: str, durations: list[int | None]):
+def run_scenario(scenario_name: str, plan_duration: int | None, cap_str: str):
     service = MockResponsibilityService()
     
-    for i, d in enumerate(durations):
-        r = Responsibility(title=f"Task {i}")
-        if d is not None:
-            r.estimated_duration = Duration(d)
+    if plan_duration is not None:
+        r = Responsibility(title="Task 1", estimated_duration=Duration(plan_duration))
         service.add(r)
-        
+    else:
+        r = Responsibility(title="Task 1", estimated_duration=None)
+        service.add(r)
+
     planner = ExecutionPlanner(service)
-    plan = planner.generate_plan()
+    advisor = CapacityAdvisor(planner)
+    
+    decision = advisor.advise(cap_str)
     
     print(f"--- {scenario_name} ---")
-    if plan.total_estimated_duration:
-        print(f"Total: {plan.total_estimated_duration}")
-    else:
-        print("Total: Unknown")
-    print()
+    print(f"Decision: {decision.outcome.value}")
+    print(f"Reason: {decision.reasoning[0] if decision.reasoning else 'No reason'}\n")
 
 def main():
-    run_scenario("Scenario 1", [90, 120, 60])
-    run_scenario("Scenario 2", [90, None, 60])
-    run_scenario("Scenario 3", [None, None])
+    run_scenario("Scenario 1 (Plan 4 hr, Cap 5 hr)", 240, "I have 5 hours")
+    run_scenario("Scenario 2 (Plan 4 hr, Cap 2 hr)", 240, "I have 2 hours")
+    run_scenario("Scenario 3 (Plan Unknown)", None, "I have 5 hours")
 
 if __name__ == "__main__":
     main()
