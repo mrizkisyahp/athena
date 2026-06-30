@@ -117,3 +117,20 @@ async def daily_briefing():
     return {
         "briefing": await container.briefing.generate_daily_briefing()
     }
+
+from app.schemas.advisor import AdvisorRequest, AdvisorResponse
+
+@app.post(
+    "/advisor",
+    response_model=AdvisorResponse,
+)
+async def advisor(
+    request: AdvisorRequest,
+):
+    answer = await container.advisor_service.advise(
+        request.question
+    )
+
+    return AdvisorResponse(
+        answer=answer
+    )

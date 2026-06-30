@@ -4,7 +4,9 @@ from app.kernel.kernel import AthenaKernel
 from app.responsibilities.service import ResponsibilityService
 from app.services.briefing_service import BriefingService
 from app.services.prompt_service import PromptService
-
+from app.advisors.availability import AvailabilityAdvisor
+from app.advisors.router import QuestionRouter
+from app.advisors.service import AdvisorService
 
 class AthenaContainer:
     """
@@ -23,6 +25,14 @@ class AthenaContainer:
 
         self.briefing = BriefingService(
             responsibilities=self.responsibilities,
+            llm=self.llm,
+            prompts=self.prompt_service,
+        )
+
+        self.availability_advisor = AvailabilityAdvisor(self.responsibilities)
+        self.question_router = QuestionRouter([self.availability_advisor])
+        self.advisor_service = AdvisorService(
+            router=self.question_router,
             llm=self.llm,
             prompts=self.prompt_service,
         )
