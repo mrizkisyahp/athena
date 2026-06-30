@@ -4,6 +4,7 @@ from app.responsibilities.models import Responsibility, ResponsibilityPriority
 from app.responsibilities.service import ResponsibilityService
 from app.planning.models import ExecutionPlan
 from app.services.time_service import TimeService
+from app.time.duration import Duration
 
 _PRIORITY_ORDER = {
     ResponsibilityPriority.CRITICAL: 0,
@@ -134,7 +135,16 @@ class ExecutionPlanner:
             "Related work is grouped together when possible to reduce context switching.",
         ]
 
+        if ordered and all(task.estimated_duration is not None for task in ordered):
+            total_duration = Duration(sum(task.estimated_duration.minutes for task in ordered))
+            rationale.append(f"The total estimated workload is approximately {total_duration.hours:g} hours.")
+        else:
+            total_duration = None
+            if ordered:
+                rationale.append("Some responsibilities do not yet have time estimates, so the total workload cannot be calculated accurately.")
+
         return ExecutionPlan(
             responsibilities=ordered,
             rationale=rationale,
+            total_estimated_duration=total_duration,
         )

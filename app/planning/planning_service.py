@@ -23,18 +23,28 @@ class PlanningService:
 
         tasks_text = []
         for i, r in enumerate(plan.responsibilities, 1):
-            due_str = r.due_date.strftime("%Y-%m-%d %H:%M") if r.due_date else "None"
-            tasks_text.append(f"{i}.\n{r.title}\nPriority:\n{r.priority.value.upper()}\nDue:\n{due_str}\n")
+            dur_str = str(r.estimated_duration) if r.estimated_duration else "Unknown duration"
+            tasks_text.append(f"{i}.\n{r.title}\n{dur_str}\n")
 
         tasks_joined = "\n".join(tasks_text)
         rationale_joined = "\n".join(f"- {reason}" for reason in plan.rationale)
 
+        workload_context = ""
+        if plan.total_estimated_duration:
+            workload_context = f"Total Estimated Workload\n{plan.total_estimated_duration}\n\n"
+        else:
+            workload_context = "Total workload:\nUnknown\nSome responsibilities are missing estimates.\n\n"
+
         prompt = (
             f"Execution Plan\n\n"
+            f"{workload_context}"
+            f"Tasks\n"
             f"{tasks_joined}\n"
             f"Rationale\n\n"
             f"{rationale_joined}\n\n"
-            f"Explain this plan as Athena, the user's Personal Chief of Staff.\n"
+            f"Explain the execution plan as Athena, the user's Personal Chief of Staff.\n"
+            f"Mention whether today's workload appears light, moderate, or heavy.\n"
+            f"Do not invent durations.\n"
             f"Do not change the order.\n"
             f"Explain why the order makes sense.\n"
             f"Encourage execution."
