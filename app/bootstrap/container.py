@@ -9,6 +9,7 @@ from app.advisors.router import QuestionRouter
 from app.advisors.service import AdvisorService
 
 from app.memory.service import MemoryService
+from app.memory.retrieval import MemoryRetriever
 
 from app.projects.service import ProjectService
 from app.planning.service import ExecutionPlanner
@@ -30,6 +31,7 @@ class AthenaContainer:
         self.responsibilities = ResponsibilityService()
         self.projects = ProjectService()
         self.memories = MemoryService()
+        self.memory_retriever = MemoryRetriever(self.memories)
         self.planner = ExecutionPlanner(self.responsibilities)
 
         self.briefing = BriefingService(
