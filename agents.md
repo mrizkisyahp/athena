@@ -313,6 +313,10 @@ PR #[Y]
 Status:
 [✅ Complete / ❌ Blocked]
 
+Definition of Done:
+- [x] Example checklist item 1
+- [x] Example checklist item 2
+
 Architect:
 [e.g., Approved without changes.]
 

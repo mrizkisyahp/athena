@@ -6,6 +6,7 @@ class Agent:
     role: str
     provider: str
     model: str
+    is_conditional: bool = False
 
 @dataclass(slots=True)
 class Task:
