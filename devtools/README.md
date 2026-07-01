@@ -30,6 +30,16 @@ The pipeline remembers every execution via `RunHistory`.
 - Persistence is intentionally deferred.
 - It is designed for future auditing and engineering traceability, so the pipeline can answer what happened in past PRs.
 
+## Development Lifecycle
+The canonical workflow for building Athena is:
+1. **Technical Lead** defines the product vision and PR specifications.
+2. **Human Operator** passes the work between systems and makes final engineering decisions.
+3. **Antigravity (Development Orchestrator)** receives the work and routes it through the pipeline.
+4. **Pipeline Engine** plans the exact execution stages.
+5. **Specialist Agents** (Architect, Executor, DB Reviewer, QA) execute the stages.
+6. **Run History** stores the executed pipeline run for auditing.
+7. **Technical Lead Review** accepts or rejects the final output.
+
 ## Team Roles
 - **Technical Lead (ChatGPT):** Product vision, Architecture, Sprint planning, PR design, Acceptance criteria, Final approval, Roadmap
 - **Human Operator (Rizki):** Makes final engineering decisions, Passes work between systems
