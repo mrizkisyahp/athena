@@ -17,6 +17,13 @@ The `devtools/` package is strictly separated from the main Athena application (
 Prompts are version-controlled engineering assets. They are treated as source code, not documentation or logic.
 Changes to prompts should be reviewed and merged just like any other implementation change to the codebase. Each prompt defines the strict persona, inputs, and boundaries for an agent in the AI Engineering Pipeline.
 
+## Execution Engine
+The `PipelineEngine` is strictly responsible for planning the workflow.
+- It determines which agents participate and in what order.
+- It does **not** execute agents.
+- Networking is intentionally out of scope.
+- The Human Operator and Development Orchestrator (Antigravity) remain responsible for actually orchestrating and executing the planned stages.
+
 ## Team Roles
 - **Technical Lead (ChatGPT):** Product vision, Architecture, Sprint planning, PR design, Acceptance criteria, Final approval, Roadmap
 - **Human Operator (Rizki):** Makes final engineering decisions, Passes work between systems

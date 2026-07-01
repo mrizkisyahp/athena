@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 @dataclass(slots=True)
 class Agent:
@@ -20,9 +20,15 @@ class AgentResult:
     duration_seconds: float | None = None
 
 @dataclass(slots=True)
+class PipelineRequest:
+    title: str
+    touches_database: bool = False
+
+@dataclass(slots=True)
 class PipelineRun:
     name: str
-    results: list['AgentResult']
+    planned_agents: list[Agent] = field(default_factory=list)
+    results: list[AgentResult] = field(default_factory=list)
 
 @dataclass(slots=True)
 class PipelineReport:
