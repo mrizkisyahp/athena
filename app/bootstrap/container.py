@@ -13,6 +13,7 @@ from app.memory.retrieval import MemoryRetriever
 
 from app.projects.service import ProjectService
 from app.calendar.service import EventService
+from app.calendar.availability import AvailabilityEngine
 from app.planning.service import ExecutionPlanner
 from app.planning.planning_service import PlanningService
 
@@ -33,6 +34,7 @@ class AthenaContainer:
         self.projects = ProjectService()
         self.memories = MemoryService()
         self.events = EventService()
+        self.availability = AvailabilityEngine(self.events)
         self.memory_retriever = MemoryRetriever(self.memories)
         self.planner = ExecutionPlanner(self.responsibilities)
 
