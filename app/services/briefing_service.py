@@ -2,6 +2,7 @@ from app.integrations.llm import LLMClient
 from app.services.prompt_service import PromptService
 from app.responsibilities.service import ResponsibilityService
 from app.schemas.chat import ChatRequest, ChatMessage
+from app.memory import MemoryRetriever, MemoryPromptBuilder, BRIEFING_QUERY
 
 
 class BriefingService:
@@ -14,10 +15,12 @@ class BriefingService:
         responsibilities: ResponsibilityService,
         llm: LLMClient,
         prompts: PromptService,
+        memory_retriever: MemoryRetriever = None,
     ):
         self._responsibilities = responsibilities
         self._llm = llm
         self._prompts = prompts
+        self._memory_retriever = memory_retriever
 
     async def generate_daily_briefing(self) -> str:
         today = self._responsibilities.get_due_today()
@@ -39,11 +42,16 @@ Completed today:
 {len(completed)} responsibility(ies)
 """
         
+        memory_context = ""
+        if self._memory_retriever:
+            relevant = self._memory_retriever.retrieve(BRIEFING_QUERY)
+            memory_context = MemoryPromptBuilder.build(relevant)
+
         user_prompt = f"""
 Generate today's briefing.
 
 {context}
-"""
+{memory_context}"""
 
         request = ChatRequest(
             messages=[

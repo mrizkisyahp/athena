@@ -2,6 +2,7 @@ from app.planning.service import ExecutionPlanner
 from app.integrations.llm import LLMClient
 from app.services.prompt_service import PromptService
 from app.schemas.chat import ChatRequest, ChatMessage
+from app.memory import MemoryRetriever, MemoryPromptBuilder, PLANNING_QUERY
 
 
 class PlanningService:
@@ -10,10 +11,12 @@ class PlanningService:
         planner: ExecutionPlanner,
         llm: LLMClient,
         prompts: PromptService,
+        memory_retriever: MemoryRetriever = None,
     ):
         self._planner = planner
         self._llm = llm
         self._prompts = prompts
+        self._memory_retriever = memory_retriever
 
     async def generate_plan(self) -> str:
         plan = self._planner.generate_plan()
@@ -34,6 +37,11 @@ class PlanningService:
             workload_context = f"Total Estimated Workload\n{plan.total_estimated_duration}\n\n"
         else:
             workload_context = "Total workload:\nUnknown\nSome responsibilities are missing estimates.\n\n"
+            
+        memory_context = ""
+        if self._memory_retriever:
+            relevant = self._memory_retriever.retrieve(PLANNING_QUERY)
+            memory_context = MemoryPromptBuilder.build(relevant)
 
         prompt = (
             f"Execution Plan\n\n"
@@ -41,7 +49,8 @@ class PlanningService:
             f"Tasks\n"
             f"{tasks_joined}\n"
             f"Rationale\n\n"
-            f"{rationale_joined}\n\n"
+            f"{rationale_joined}\n"
+            f"{memory_context}"
             f"Explain the execution plan as Athena, the user's Personal Chief of Staff.\n"
             f"Mention whether today's workload appears light, moderate, or heavy.\n"
             f"Do not invent durations.\n"

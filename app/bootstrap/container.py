@@ -38,12 +38,14 @@ class AthenaContainer:
             responsibilities=self.responsibilities,
             llm=self.llm,
             prompts=self.prompt_service,
+            memory_retriever=self.memory_retriever,
         )
 
         self.planning_service = PlanningService(
             planner=self.planner,
             llm=self.llm,
             prompts=self.prompt_service,
+            memory_retriever=self.memory_retriever,
         )
 
         self.availability_advisor = AvailabilityAdvisor(self.responsibilities)
@@ -59,6 +61,7 @@ class AthenaContainer:
             router=self.question_router,
             llm=self.llm,
             prompts=self.prompt_service,
+            memory_retriever=self.memory_retriever,
         )
 
         self.kernel = AthenaKernel(

@@ -3,7 +3,7 @@ from sqlalchemy import select
 from app.memory.models import Memory, MemoryType, MemoryImportance
 from app.database.session import SessionLocal
 from app.database.models import MemoryORM
-from app.database.mappers import to_memory_domain, to_memory_orm
+import app.database.mappers as mappers
 
 class MemoryService:
     """
@@ -21,7 +21,7 @@ class MemoryService:
             content=content,
             importance=importance
         )
-        orm_model = to_memory_orm(memory)
+        orm_model = mappers.to_memory_orm(memory)
 
         with self._session_factory() as session:
             session.add(orm_model)
@@ -33,7 +33,7 @@ class MemoryService:
         """Returns every stored memory."""
         with self._session_factory() as session:
             models = session.scalars(select(MemoryORM)).all()
-            return [to_memory_domain(model) for model in models]
+            return [mappers.to_memory_domain(model) for model in models]
         
     def get_by_id(self, memory_id: str) -> Memory | None:
         """Returns a specific memory by ID."""
@@ -41,7 +41,7 @@ class MemoryService:
             model = session.get(MemoryORM, memory_id)
             if not model:
                 return None
-            return to_memory_domain(model)
+            return mappers.to_memory_domain(model)
         
     def delete(self, memory_id: str) -> bool:
         """

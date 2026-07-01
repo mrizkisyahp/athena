@@ -3,6 +3,7 @@ from app.advisors.decision import AdvisorDecision, DecisionOutcome
 from app.integrations.llm import LLMClient
 from app.services.prompt_service import PromptService
 from app.schemas.chat import ChatRequest, ChatMessage
+from app.memory import MemoryRetriever, MemoryPromptBuilder
 
 class AdvisorService:
 
@@ -11,10 +12,12 @@ class AdvisorService:
         router: QuestionRouter,
         llm: LLMClient,
         prompts: PromptService,
+        memory_retriever: MemoryRetriever = None,
     ):
         self._router = router
         self._llm = llm
         self._prompts = prompts
+        self._memory_retriever = memory_retriever
 
     async def advise(self, question: str) -> str:
         advisor = self._router.route(question)
@@ -32,11 +35,17 @@ class AdvisorService:
 
         reasoning_list = "\n".join(f"- {reason}" for reason in decision.reasoning)
         
+        memory_context = ""
+        if self._memory_retriever:
+            relevant = self._memory_retriever.retrieve(question)
+            memory_context = MemoryPromptBuilder.build(relevant)
+        
         prompt = (
             f"User Question:\n{question}\n\n"
             f"Decision:\n{decision.outcome.value}\n\n"
             f"Confidence:\n{decision.confidence}\n\n"
-            f"Reasoning:\n{reasoning_list}\n\n"
+            f"Reasoning:\n{reasoning_list}\n"
+            f"{memory_context}"
             "Explain this decision as Athena, the user's Personal Chief of Staff.\n"
             "Be reassuring, practical, and concise."
         )
