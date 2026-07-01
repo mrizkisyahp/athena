@@ -1,5 +1,6 @@
 from devtools.models import Agent
 from devtools.providers.models import ProviderProfile
+from app.config.settings import settings
 
 class EngineeringTeam:
     TECHNICAL_LEAD = Agent(
@@ -57,12 +58,42 @@ class Profiles:
         model="fake-model",
         api_key_source=None
     )
+    NINE_ROUTER_ARCHITECT = ProviderProfile(
+        name="9router - Architect",
+        provider_type="nine_router",
+        base_url=settings.devtools_ninerouter_base_url,
+        model=settings.devtools_architect_model,
+        api_key_source="devtools_ninerouter_api_key"
+    )
     
+    NINE_ROUTER_BACKEND_EXECUTOR = ProviderProfile(
+        name="9router - Backend Executor",
+        provider_type="nine_router",
+        base_url=settings.devtools_ninerouter_base_url,
+        model=settings.devtools_backend_executor_model,
+        api_key_source="devtools_ninerouter_api_key"
+    )
+    
+    NINE_ROUTER_DATABASE_REVIEWER = ProviderProfile(
+        name="9router - Database Reviewer",
+        provider_type="nine_router",
+        base_url=settings.devtools_ninerouter_base_url,
+        model=settings.devtools_database_reviewer_model,
+        api_key_source="devtools_ninerouter_api_key"
+    )
+    
+    NINE_ROUTER_QA_REVIEWER = ProviderProfile(
+        name="9router - QA Reviewer",
+        provider_type="nine_router",
+        base_url=settings.devtools_ninerouter_base_url,
+        model=settings.devtools_qa_reviewer_model,
+        api_key_source="devtools_ninerouter_api_key"
+    )
     ACTIVE_MAPPING = {
         EngineeringTeam.TECHNICAL_LEAD: FAKE,
         EngineeringTeam.DEVELOPMENT_ORCHESTRATOR: FAKE,
-        EngineeringTeam.ARCHITECT: FAKE,
-        EngineeringTeam.BACKEND_EXECUTOR: FAKE,
-        EngineeringTeam.DATABASE_REVIEWER: FAKE,
-        EngineeringTeam.QA_REVIEWER: FAKE,
+        EngineeringTeam.ARCHITECT: NINE_ROUTER_ARCHITECT,
+        EngineeringTeam.BACKEND_EXECUTOR: NINE_ROUTER_BACKEND_EXECUTOR,
+        EngineeringTeam.DATABASE_REVIEWER: NINE_ROUTER_DATABASE_REVIEWER,
+        EngineeringTeam.QA_REVIEWER: NINE_ROUTER_QA_REVIEWER,
     }

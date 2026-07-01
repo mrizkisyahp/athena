@@ -1,40 +1,39 @@
 from pathlib import Path
 from devtools.config import EngineeringTeam, Profiles
-from devtools.providers.base import BaseProvider
-from devtools.providers.models import ProviderRequest, ProviderResponse
-
-class FakeProvider(BaseProvider):
-    def execute(self, request: ProviderRequest) -> ProviderResponse:
-        return ProviderResponse(
-            output="Hello from Fake Provider",
-            provider_name="FakeProvider",
-            duration_seconds=0.1
-        )
+from devtools.providers.nine_router import NineRouterProvider
+from devtools.providers.models import ProviderRequest
 
 def main():
-    agent = EngineeringTeam.ARCHITECT
-    profile = Profiles.ACTIVE_MAPPING[agent]
-    prompt_path = Path("devtools/prompts/architect.md")
-    prompt_content = prompt_path.read_text() if prompt_path.exists() else "You are an architect."
+    agents = EngineeringTeam.get_all_agents()
+    provider = NineRouterProvider()
     
-    request = ProviderRequest(
-        agent=agent,
-        profile=profile,
-        instructions="Say hello",
-        prompt=prompt_content
-    )
-    
-    print("--- Fake Request ---")
-    print(f"Agent: {agent.name}")
-    print(f"Profile: {profile.name} (Model: {profile.model})")
-    
-    provider = FakeProvider()
-    response = provider.execute(request)
-    
-    print("\n--- Fake Response ---")
-    print(f"Provider: {response.provider_name}")
-    print(f"Duration: {response.duration_seconds}s")
-    print(f"Output:\n{response.output}")
+    for agent in agents:
+        profile = Profiles.ACTIVE_MAPPING[agent]
+        if profile.provider_type == "fake":
+            continue
+            
+        prompt_path = Path(f"devtools/prompts/{agent.role.lower().replace(' ', '_')}.md")
+        prompt_content = prompt_path.read_text() if prompt_path.exists() else f"You are a {agent.role}."
+        
+        request = ProviderRequest(
+            agent=agent,
+            profile=profile,
+            instructions="Say hello briefly.",
+            prompt=prompt_content
+        )
+        
+        print(f"\n--- NineRouter Request: {agent.role} ---")
+        print(f"Agent: {agent.name}")
+        print(f"Profile: {profile.name} (Model: {profile.model})")
+        
+        try:
+            response = provider.execute(request)
+            print(f"--- NineRouter Response: {agent.role} ---")
+            print(f"Provider: {response.provider_name}")
+            print(f"Duration: {response.duration_seconds}s")
+            print(f"Output:\n{response.output}")
+        except Exception as e:
+            print(f"FAILED: {str(e)}")
 
 if __name__ == "__main__":
     main()

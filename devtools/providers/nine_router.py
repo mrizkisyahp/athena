@@ -9,28 +9,31 @@ class NineRouterProviderError(Exception):
     pass
 
 class NineRouterProvider(BaseProvider):
-    def __init__(self):
-        self.api_key = settings.llm_api_key
-        self.base_url = settings.llm_base_url
-        
-        self.client = OpenAI(
-            api_key=self.api_key,
-            base_url=self.base_url
-        )
-        
     def execute(self, request: ProviderRequest) -> ProviderResponse:
         start_time = time.time()
+        profile = request.profile
+        
+        # Safely resolve API key from settings
+        api_key = getattr(settings, profile.api_key_source, None) if profile.api_key_source else None
+        
+        if not api_key:
+            raise NineRouterProviderError(f"Missing API key for source: {profile.api_key_source}")
+            
+        client = OpenAI(
+            api_key=api_key,
+            base_url=profile.base_url
+        )
         
         try:
-            response = self.client.chat.completions.create(
-                model=request.agent.model,
+            response = client.chat.completions.create(
+                model=profile.model,
                 messages=[
                     {"role": "system", "content": request.prompt},
                     {"role": "user", "content": request.instructions}
                 ]
             )
         except Exception as e:
-            raise NineRouterProviderError(f"Provider execution failed: {str(e)}") from e
+            raise NineRouterProviderError(f"NineRouter execution failed: {str(e)}") from e
             
         duration = time.time() - start_time
         output = response.choices[0].message.content or ""
