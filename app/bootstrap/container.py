@@ -12,12 +12,13 @@ from app.memory.service import MemoryService
 from app.memory.retrieval import MemoryRetriever
 
 from app.projects.service import ProjectService
+from app.calendar.service import EventService
 from app.planning.service import ExecutionPlanner
 from app.planning.planning_service import PlanningService
 
 class AthenaContainer:
     """
-    Responsible for constructing Athena.
+    Central dependency injection container.
     """
 
     def __init__(self):
@@ -31,6 +32,7 @@ class AthenaContainer:
         self.responsibilities = ResponsibilityService()
         self.projects = ProjectService()
         self.memories = MemoryService()
+        self.events = EventService()
         self.memory_retriever = MemoryRetriever(self.memories)
         self.planner = ExecutionPlanner(self.responsibilities)
 

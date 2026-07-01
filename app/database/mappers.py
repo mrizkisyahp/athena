@@ -61,11 +61,36 @@ def to_memory_domain(model: MemoryORM) -> Memory:
         created_at=model.created_at,
     )
 
-def to_memory_orm(model: Memory) -> MemoryORM:
+def to_memory_orm(domain_model: Memory) -> MemoryORM:
     return MemoryORM(
-        id=model.id,
-        memory_type=model.memory_type.value,
-        content=model.content,
-        importance=model.importance.value,
-        created_at=model.created_at,
+        id=domain_model.id,
+        memory_type=domain_model.memory_type.value,
+        content=domain_model.content,
+        importance=domain_model.importance.value,
+        created_at=domain_model.created_at
+    )
+
+from app.calendar.models import Event
+from app.database.models import EventORM
+
+def to_event_domain(orm_model: EventORM) -> Event:
+    return Event(
+        id=orm_model.id,
+        title=orm_model.title,
+        start_time=orm_model.start_time,
+        end_time=orm_model.end_time,
+        location=orm_model.location,
+        notes=orm_model.notes,
+        created_at=orm_model.created_at
+    )
+
+def to_event_orm(domain_model: Event) -> EventORM:
+    return EventORM(
+        id=domain_model.id,
+        title=domain_model.title,
+        start_time=domain_model.start_time,
+        end_time=domain_model.end_time,
+        location=domain_model.location,
+        notes=domain_model.notes,
+        created_at=domain_model.created_at
     )

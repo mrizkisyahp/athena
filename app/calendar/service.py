@@ -1,15 +1,15 @@
 from datetime import datetime, date
 from app.calendar.models import Event
+from app.database.session import SessionLocal
+from app.database.models import EventORM
+from app.database.mappers import to_event_domain, to_event_orm
 
 class EventService:
     """
     Domain service responsible for managing calendar events.
-    Currently backed by in-memory storage.
+    Backed by PostgreSQL storage.
     """
     
-    def __init__(self):
-        self._events: list[Event] = []
-        
     def create(
         self,
         title: str,
@@ -18,7 +18,7 @@ class EventService:
         location: str | None = None,
         notes: str | None = None,
     ) -> Event:
-        """Creates and stores a new event."""
+        """Creates and stores a new event in the database."""
         event = Event(
             title=title,
             start_time=start_time,
@@ -26,34 +26,44 @@ class EventService:
             location=location,
             notes=notes
         )
-        self._events.append(event)
+        
+        with SessionLocal() as session:
+            orm_event = to_event_orm(event)
+            session.add(orm_event)
+            session.commit()
+            
         return event
         
     def get_all(self) -> list[Event]:
-        """Returns every stored event. (Defensive copy)"""
-        return list(self._events)
-        
+        """Returns every stored event."""
+        with SessionLocal() as session:
+            orm_events = session.query(EventORM).order_by(EventORM.created_at).all()
+            return [to_event_domain(orm) for orm in orm_events]
+            
     def get_by_id(self, event_id: str) -> Event | None:
         """Returns a specific event by ID, or None if not found."""
-        for event in self._events:
-            if event.id == event_id:
-                return event
-        return None
-        
+        with SessionLocal() as session:
+            orm_event = session.query(EventORM).filter(EventORM.id == event_id).first()
+            if orm_event:
+                return to_event_domain(orm_event)
+            return None
+            
     def delete(self, event_id: str) -> bool:
         """
         Deletes a specific event by ID.
         Returns True if deleted, False if not found.
         """
-        for i, event in enumerate(self._events):
-            if event.id == event_id:
-                del self._events[i]
-                return True
-        return False
-        
+        with SessionLocal() as session:
+            orm_event = session.query(EventORM).filter(EventORM.id == event_id).first()
+            if not orm_event:
+                return False
+            session.delete(orm_event)
+            session.commit()
+            return True
+            
     def get_events_for_day(self, day: date) -> list[Event]:
         """
         Returns events scheduled for a specific day, preserving creation order.
         Filters using start_time.date() == day.
         """
-        return [e for e in self._events if e.start_time.date() == day]
+        return [e for e in self.get_all() if e.start_time.date() == day]
