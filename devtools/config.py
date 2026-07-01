@@ -97,3 +97,10 @@ class Profiles:
         EngineeringTeam.DATABASE_REVIEWER: NINE_ROUTER_DATABASE_REVIEWER,
         EngineeringTeam.QA_REVIEWER: NINE_ROUTER_QA_REVIEWER,
     }
+class ProfileRegistry:
+    @classmethod
+    def resolve(cls, agent: Agent) -> ProviderProfile:
+        profile = Profiles.ACTIVE_MAPPING.get(agent)
+        if not profile:
+            raise ValueError(f"No ProviderProfile mapped for agent: {agent.name}")
+        return profile

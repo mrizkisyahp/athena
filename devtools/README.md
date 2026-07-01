@@ -44,6 +44,14 @@ The `NineRouterProvider` is one implementation designed for the 9router service.
 - Provider implementations should remain "boring" translation layers.
 - Additional providers can be added without modifying the engine.
 
+## Runtime
+The Execution Runtime is the bridge between planning and execution.
+- **Runtime** executes.
+- **Engine** plans.
+- **Provider** communicates.
+- **Antigravity** coordinates.
+These four responsibilities remain independent. The Runtime is intentionally "dumb" and strictly executes the plan sequentially, halting on any failure.
+
 ## Development Lifecycle
 The canonical workflow for building Athena is:
 1. **Technical Lead** defines the product vision and PR specifications.

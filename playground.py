@@ -1,39 +1,33 @@
-from pathlib import Path
-from devtools.config import EngineeringTeam, Profiles
+import sys
+from devtools.engine import PipelineEngine
+from devtools.models import PipelineRequest
 from devtools.providers.nine_router import NineRouterProvider
-from devtools.providers.models import ProviderRequest
+from devtools.runtime import ExecutionRuntime
 
 def main():
-    agents = EngineeringTeam.get_all_agents()
-    provider = NineRouterProvider()
+    sys.stdout.reconfigure(encoding='utf-8')
+    print("1. Planning execution...")
+    engine = PipelineEngine()
+    request = PipelineRequest(title="Sprint 10 PR1", touches_database=False)
+    run = engine.plan(request)
     
-    for agent in agents:
-        profile = Profiles.ACTIVE_MAPPING[agent]
-        if profile.provider_type == "fake":
-            continue
+    print("\n2. Initializing Runtime...")
+    provider = NineRouterProvider()
+    runtime = ExecutionRuntime(provider=provider)
+    
+    print(f"\n3. Executing Pipeline: {run.name}")
+    try:
+        runtime.execute(run, instructions="Say hello briefly!")
+        
+        print("\n4. Pipeline Results:")
+        for result in run.results:
+            print(f"[{result.agent.role}]")
+            print(f"[PASS] Completed in {result.duration_seconds}s")
+            print(f"Output: {result.output.strip()}\n")
             
-        prompt_path = Path(f"devtools/prompts/{agent.role.lower().replace(' ', '_')}.md")
-        prompt_content = prompt_path.read_text() if prompt_path.exists() else f"You are a {agent.role}."
-        
-        request = ProviderRequest(
-            agent=agent,
-            profile=profile,
-            instructions="Say hello briefly.",
-            prompt=prompt_content
-        )
-        
-        print(f"\n--- NineRouter Request: {agent.role} ---")
-        print(f"Agent: {agent.name}")
-        print(f"Profile: {profile.name} (Model: {profile.model})")
-        
-        try:
-            response = provider.execute(request)
-            print(f"--- NineRouter Response: {agent.role} ---")
-            print(f"Provider: {response.provider_name}")
-            print(f"Duration: {response.duration_seconds}s")
-            print(f"Output:\n{response.output}")
-        except Exception as e:
-            print(f"FAILED: {str(e)}")
+        print("Pipeline completed successfully.")
+    except Exception as e:
+        print(f"\n[FAIL] Pipeline halted due to failure: {str(e)}")
 
 if __name__ == "__main__":
     main()
