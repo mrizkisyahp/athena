@@ -83,5 +83,12 @@ class AthenaContainer:
             prompts=self.prompt_service,
         )
 
+        from app.awareness.service import InsightEngine
+        self.insights = InsightEngine(
+            planner=self.planner,
+            workload=self.workload_balancer,
+            availability=self.availability
+        )
+
 
 container = AthenaContainer()
