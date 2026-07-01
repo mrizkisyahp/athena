@@ -8,6 +8,8 @@ from app.advisors.availability import AvailabilityAdvisor
 from app.advisors.router import QuestionRouter
 from app.advisors.service import AdvisorService
 
+from app.memory.service import MemoryService
+
 from app.projects.service import ProjectService
 from app.planning.service import ExecutionPlanner
 from app.planning.planning_service import PlanningService
@@ -27,6 +29,7 @@ class AthenaContainer:
 
         self.responsibilities = ResponsibilityService()
         self.projects = ProjectService()
+        self.memories = MemoryService()
         self.planner = ExecutionPlanner(self.responsibilities)
 
         self.briefing = BriefingService(

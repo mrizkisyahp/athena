@@ -58,3 +58,18 @@ class ProjectORM(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True)
     )
+
+class MemoryORM(Base):
+    __tablename__ = "memories"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+
+    memory_type: Mapped[str] = mapped_column(String)
+
+    content: Mapped[str] = mapped_column(String)
+
+    importance: Mapped[str] = mapped_column(String)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True)
+    )

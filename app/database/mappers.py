@@ -1,6 +1,7 @@
-from app.database.models import ResponsibilityORM, ProjectORM
+from app.database.models import ResponsibilityORM, ProjectORM, MemoryORM
 from app.responsibilities.models import Responsibility
 from app.projects.models import Project
+from app.memory.models import Memory, MemoryType, MemoryImportance
 from app.time.duration import Duration
 
 
@@ -48,5 +49,23 @@ def to_project_orm(model: Project) -> ProjectORM:
         id=model.id,
         name=model.name,
         description=model.description,
+        created_at=model.created_at,
+    )
+
+def to_memory_domain(model: MemoryORM) -> Memory:
+    return Memory(
+        id=model.id,
+        memory_type=MemoryType(model.memory_type),
+        content=model.content,
+        importance=MemoryImportance(model.importance),
+        created_at=model.created_at,
+    )
+
+def to_memory_orm(model: Memory) -> MemoryORM:
+    return MemoryORM(
+        id=model.id,
+        memory_type=model.memory_type.value,
+        content=model.content,
+        importance=model.importance.value,
         created_at=model.created_at,
     )

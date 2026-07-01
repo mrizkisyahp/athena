@@ -1,13 +1,18 @@
+from sqlalchemy import select
+
 from app.memory.models import Memory, MemoryType, MemoryImportance
+from app.database.session import SessionLocal
+from app.database.models import MemoryORM
+from app.database.mappers import to_memory_domain, to_memory_orm
 
 class MemoryService:
     """
     Domain service responsible for managing Athena's long-term memories.
-    Currently utilizes purely in-memory storage.
+    Utilizes PostgreSQL for persistence.
     """
     
     def __init__(self):
-        self._memories: list[Memory] = []
+        self._session_factory = SessionLocal
         
     def create(self, memory_type: MemoryType, content: str, importance: MemoryImportance) -> Memory:
         """Creates and stores a new memory."""
@@ -16,32 +21,44 @@ class MemoryService:
             content=content,
             importance=importance
         )
-        self._memories.append(memory)
+        orm_model = to_memory_orm(memory)
+
+        with self._session_factory() as session:
+            session.add(orm_model)
+            session.commit()
+            
         return memory
         
     def get_all(self) -> list[Memory]:
         """Returns every stored memory."""
-        # Return a copy to prevent external mutation of the internal list
-        return list(self._memories)
+        with self._session_factory() as session:
+            models = session.scalars(select(MemoryORM)).all()
+            return [to_memory_domain(model) for model in models]
         
     def get_by_id(self, memory_id: str) -> Memory | None:
         """Returns a specific memory by ID."""
-        for memory in self._memories:
-            if memory.id == memory_id:
-                return memory
-        return None
+        with self._session_factory() as session:
+            model = session.get(MemoryORM, memory_id)
+            if not model:
+                return None
+            return to_memory_domain(model)
         
     def delete(self, memory_id: str) -> bool:
         """
         Deletes a memory by ID.
         Returns True if deleted, False if not found.
         """
-        for i, memory in enumerate(self._memories):
-            if memory.id == memory_id:
-                del self._memories[i]
-                return True
-        return False
+        with self._session_factory() as session:
+            model = session.get(MemoryORM, memory_id)
+            if not model:
+                return False
+            session.delete(model)
+            session.commit()
+            return True
         
     def get_by_type(self, memory_type: MemoryType) -> list[Memory]:
         """Returns memories matching the requested category."""
-        return [m for m in self._memories if m.memory_type == memory_type]
+        with self._session_factory() as session:
+            stmt = select(MemoryORM).where(MemoryORM.memory_type == memory_type.value)
+            models = session.scalars(stmt).all()
+            return [to_memory_domain(model) for model in models]
