@@ -38,11 +38,29 @@ class AthenaContainer:
         self.memory_retriever = MemoryRetriever(self.memories)
         self.planner = ExecutionPlanner(self.responsibilities, self.availability)
 
+        from app.workload.service import WorkloadBalancer
+        from app.workload.workload_service import WorkloadService
+        
+        self.workload_balancer = WorkloadBalancer(self.planner)
+        self.workload_service = WorkloadService(
+            balancer=self.workload_balancer,
+            llm=self.llm,
+            prompts=self.prompt_service,
+        )
+
+        from app.awareness.service import InsightEngine
+        self.insights = InsightEngine(
+            planner=self.planner,
+            workload=self.workload_balancer,
+            availability=self.availability
+        )
+
         self.briefing = BriefingService(
             responsibilities=self.responsibilities,
             llm=self.llm,
             prompts=self.prompt_service,
             memory_retriever=self.memory_retriever,
+            insight_engine=self.insights,
         )
 
         self.planning_service = PlanningService(
@@ -50,6 +68,7 @@ class AthenaContainer:
             llm=self.llm,
             prompts=self.prompt_service,
             memory_retriever=self.memory_retriever,
+            insight_engine=self.insights,
         )
 
         self.availability_advisor = AvailabilityAdvisor(self.responsibilities)
@@ -66,28 +85,12 @@ class AthenaContainer:
             llm=self.llm,
             prompts=self.prompt_service,
             memory_retriever=self.memory_retriever,
+            insight_engine=self.insights,
         )
 
         self.kernel = AthenaKernel(
             self.communication,
             self.responsibilities
-        )
-        
-        from app.workload.service import WorkloadBalancer
-        from app.workload.workload_service import WorkloadService
-        
-        self.workload_balancer = WorkloadBalancer(self.planner)
-        self.workload_service = WorkloadService(
-            balancer=self.workload_balancer,
-            llm=self.llm,
-            prompts=self.prompt_service,
-        )
-
-        from app.awareness.service import InsightEngine
-        self.insights = InsightEngine(
-            planner=self.planner,
-            workload=self.workload_balancer,
-            availability=self.availability
         )
 
 

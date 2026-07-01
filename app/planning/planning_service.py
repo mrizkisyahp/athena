@@ -12,11 +12,13 @@ class PlanningService:
         llm: LLMClient,
         prompts: PromptService,
         memory_retriever: MemoryRetriever = None,
+        insight_engine = None,
     ):
         self._planner = planner
         self._llm = llm
         self._prompts = prompts
         self._memory_retriever = memory_retriever
+        self._insight_engine = insight_engine
 
     async def generate_plan(self) -> str:
         plan = self._planner.generate_plan()
@@ -43,6 +45,16 @@ class PlanningService:
             relevant = self._memory_retriever.retrieve(PLANNING_QUERY)
             memory_context = MemoryPromptBuilder.build(relevant)
 
+        insight_context = ""
+        if self._insight_engine:
+            from app.awareness.constants import PLANNING_INSIGHT_CAPACITY
+            from app.awareness.prompt import InsightPromptBuilder
+            from app.services.time_service import TimeService
+            
+            day = TimeService.now().date()
+            insights = self._insight_engine.generate(day, PLANNING_INSIGHT_CAPACITY)
+            insight_context = InsightPromptBuilder.build(insights)
+
         prompt = (
             f"Execution Plan\n\n"
             f"{workload_context}"
@@ -51,6 +63,7 @@ class PlanningService:
             f"Rationale\n\n"
             f"{rationale_joined}\n"
             f"{memory_context}"
+            f"{insight_context}"
             f"Explain the execution plan as Athena, the user's Personal Chief of Staff.\n"
             f"Mention whether today's workload appears light, moderate, or heavy.\n"
             f"Do not invent durations.\n"

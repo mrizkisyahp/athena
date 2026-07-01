@@ -16,11 +16,13 @@ class BriefingService:
         llm: LLMClient,
         prompts: PromptService,
         memory_retriever: MemoryRetriever = None,
+        insight_engine = None,
     ):
         self._responsibilities = responsibilities
         self._llm = llm
         self._prompts = prompts
         self._memory_retriever = memory_retriever
+        self._insight_engine = insight_engine
 
     async def generate_daily_briefing(self) -> str:
         today = self._responsibilities.get_due_today()
@@ -47,11 +49,22 @@ Completed today:
             relevant = self._memory_retriever.retrieve(BRIEFING_QUERY)
             memory_context = MemoryPromptBuilder.build(relevant)
 
+        insight_context = ""
+        if self._insight_engine:
+            from app.awareness.constants import BRIEFING_INSIGHT_CAPACITY
+            from app.awareness.prompt import InsightPromptBuilder
+            from app.services.time_service import TimeService
+            
+            day = TimeService.now().date()
+            insights = self._insight_engine.generate(day, BRIEFING_INSIGHT_CAPACITY)
+            insight_context = InsightPromptBuilder.build(insights)
+
         user_prompt = f"""
 Generate today's briefing.
 
 {context}
-{memory_context}"""
+{memory_context}
+{insight_context}"""
 
         request = ChatRequest(
             messages=[
