@@ -22,42 +22,42 @@ def main():
     )
     
     # Execute Workflow
-    print("Starting Orchestrator Workflow for Sprint 10 PR 1...")
-    request = PipelineRequest(title="Sprint 10 PR1: Memory Domain Model", touches_database=False)
+    print("Starting Orchestrator Workflow for Sprint 10 PR 2...")
+    request = PipelineRequest(title="Sprint 10 PR2: Memory Service", touches_database=False)
     
     instructions = """
 Target Project: Athena
 Sprint: 10
-PR: #1
-Feature: Memory Domain Model
+PR: #2
+Feature: Memory Service
 
-Objective: Create the foundational domain objects for Athena's long-term memory system.
+Objective: Implement the domain service responsible for managing Athena's long-term memories.
 
 Requirements:
-Create `app/memory/__init__.py` and `app/memory/models.py`.
+Create `app/memory/service.py`.
+Implement `MemoryService` with the following responsibilities:
+1. `create(memory_type: MemoryType, content: str, importance: MemoryImportance) -> Memory`: Creates and stores a new memory.
+2. `get_all() -> list[Memory]`: Returns every stored memory.
+3. `get_by_id(memory_id: str) -> Memory | None`: Returns a specific memory.
+4. `delete(memory_id: str) -> bool`: Deletes a memory (returns True if deleted, False if not found).
+5. `get_by_type(memory_type: MemoryType) -> list[Memory]`: Returns memories matching the category.
 
-Implement:
-1. `Memory`: A domain dataclass representing a single long-lived fact.
-   Suggested fields: id, memory_type, content, importance, created_at
-   Use the existing TimeService for timestamps and UUIDs consistent with the rest of Athena.
-2. `MemoryType` (Enum): PREFERENCE, GOAL, ROUTINE, CONTEXT
-3. `MemoryImportance` (Enum): LOW, MEDIUM, HIGH
+Business Rules:
+- No uniqueness constraints. Duplicate content (e.g., Preference "I like coffee" twice) is allowed.
+- Memory represents observations, not normalized DB records.
 
-Constraints:
-- No database.
-- No HTTP endpoints.
-- No service layer.
-- No LLM integration.
-- Pure domain only.
-- Match the style of existing domain models throughout Athena.
+Storage:
+- Use purely in-memory storage (e.g., `self._memories: list[Memory]`).
+- No PostgreSQL/ORM logic yet.
+- Return pure domain objects.
+
+Special Requests for the DevTools Pipeline:
+- ARCHITECT: Consider whether deleting a memory should physically remove it, or if Athena should eventually support archiving. Note your thoughts in the review, but recommend physical deletion for this PR.
+- QA: Specifically verify that creating multiple memories of the same type works, duplicate content is allowed, get_by_id() returns None for unknown IDs, delete() returns False when ID doesn't exist, and the service doesn't mutate existing Memory instances (since they are immutable).
 
 Playground:
-Instantiate several memories and verify construction.
-Example:
-Preference: "I prefer coding after dinner."
-Goal: "Graduate this year."
-Routine: "Review tasks every morning."
-Print the resulting dataclasses.
+Create several memories (Preference, Goal, Routine, Context).
+Verify: All Memories -> Get by Type -> Get by ID -> Delete -> Verify deletion.
 """
     
     run = orchestrator.execute_pipeline(request, instructions=instructions)
