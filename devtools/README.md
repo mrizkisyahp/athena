@@ -30,6 +30,12 @@ The pipeline remembers every execution via `RunHistory`.
 - Persistence is intentionally deferred.
 - It is designed for future auditing and engineering traceability, so the pipeline can answer what happened in past PRs.
 
+## Provider Architecture
+The pipeline depends on the `BaseProvider` abstraction.
+- Concrete providers live behind this abstraction.
+- Networking belongs to implementations, not the engine.
+- New providers can be added without modifying the engine.
+
 ## Development Lifecycle
 The canonical workflow for building Athena is:
 1. **Technical Lead** defines the product vision and PR specifications.

@@ -1,25 +1,30 @@
-from devtools.models import PipelineRun, PipelineReport
-from devtools.history import RunHistory
+from devtools.models import Agent
+from devtools.providers.base import BaseProvider
+from devtools.providers.models import ProviderRequest, ProviderResponse
+
+class FakeProvider(BaseProvider):
+    def execute(self, request: ProviderRequest) -> ProviderResponse:
+        return ProviderResponse(
+            output="Hello from Fake Provider",
+            provider_name="FakeProvider",
+            duration_seconds=0.1
+        )
 
 def main():
-    history = RunHistory()
+    agent = Agent(name="TestAgent", role="Test Role", provider="Fake", model="fake-model")
+    request = ProviderRequest(
+        agent=agent,
+        instructions="Say hello",
+        prompt="You are a fake agent."
+    )
     
-    run1 = PipelineRun(name="Sprint 10 PR1", report=PipelineReport(stage="Done", completed=True, summary="First PR done"))
-    run2 = PipelineRun(name="Sprint 10 PR2", report=PipelineReport(stage="Done", completed=True, summary="Second PR done"))
+    provider = FakeProvider()
+    print("--- Provider Request ---")
+    print(request)
     
-    history.add(run1)
-    history.add(run2)
-    
-    print("--- Stored Runs ---")
-    for r in history.get_all():
-        print(r.name)
-        
-    print("\n--- Retrieve Run ---")
-    retrieved = history.get("Sprint 10 PR1")
-    if retrieved:
-        print(f"Found: {retrieved.name} - {retrieved.report.summary if retrieved.report else 'No report'}")
-    else:
-        print("Run not found")
+    print("\n--- Provider Response ---")
+    response = provider.execute(request)
+    print(response)
 
 if __name__ == "__main__":
     main()
