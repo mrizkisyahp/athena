@@ -36,6 +36,12 @@ The pipeline depends on the `BaseProvider` abstraction.
 - Networking belongs to implementations, not the engine.
 - New providers can be added without modifying the engine.
 
+## NineRouter Provider
+The `NineRouterProvider` implements `BaseProvider` for OpenRouter/NVIDIA API endpoints.
+- It is responsible only for transport (translating requests and responses).
+- Retries and orchestration are intentionally deferred.
+- It uses centralized configuration (`app.config.settings`).
+
 ## Development Lifecycle
 The canonical workflow for building Athena is:
 1. **Technical Lead** defines the product vision and PR specifications.

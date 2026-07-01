@@ -1,51 +1,40 @@
 from devtools.models import Agent
+from devtools.providers.models import ProviderProfile
 
 class EngineeringTeam:
     TECHNICAL_LEAD = Agent(
         name="ChatGPT",
         role="Technical Lead",
-        provider="OpenAI",
-        model="gpt-4",
         is_conditional=False
     )
     
     DEVELOPMENT_ORCHESTRATOR = Agent(
         name="Antigravity",
         role="Development Orchestrator",
-        provider="Google DeepMind",
-        model="antigravity",
         is_conditional=False
     )
     
     ARCHITECT = Agent(
         name="Kimi K2.6",
         role="Architect",
-        provider="Moonshot",
-        model="moonshot-v1",
         is_conditional=False
     )
     
     BACKEND_EXECUTOR = Agent(
         name="Cohere North Mini Code",
         role="Backend Executor",
-        provider="Cohere",
-        model="command-r",
         is_conditional=False
     )
     
     DATABASE_REVIEWER = Agent(
         name="Llama 3.3 70B",
         role="Database Reviewer",
-        provider="Meta",
-        model="llama-3.3-70b-instruct",
         is_conditional=True
     )
     
     QA_REVIEWER = Agent(
         name="gpt-oss-120B",
         role="QA Reviewer",
-        provider="OpenAI",
-        model="gpt-oss-120b",
         is_conditional=False
     )
     
@@ -59,3 +48,21 @@ class EngineeringTeam:
             cls.DATABASE_REVIEWER,
             cls.QA_REVIEWER
         ]
+
+class Profiles:
+    FAKE = ProviderProfile(
+        name="Fake Profile",
+        provider_type="fake",
+        base_url=None,
+        model="fake-model",
+        api_key_source=None
+    )
+    
+    ACTIVE_MAPPING = {
+        EngineeringTeam.TECHNICAL_LEAD: FAKE,
+        EngineeringTeam.DEVELOPMENT_ORCHESTRATOR: FAKE,
+        EngineeringTeam.ARCHITECT: FAKE,
+        EngineeringTeam.BACKEND_EXECUTOR: FAKE,
+        EngineeringTeam.DATABASE_REVIEWER: FAKE,
+        EngineeringTeam.QA_REVIEWER: FAKE,
+    }

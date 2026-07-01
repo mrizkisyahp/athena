@@ -1,11 +1,9 @@
 from dataclasses import dataclass, field
 
-@dataclass(slots=True)
+@dataclass(slots=True, frozen=True)
 class Agent:
     name: str
     role: str
-    provider: str
-    model: str
     is_conditional: bool = False
 
 @dataclass(slots=True)
