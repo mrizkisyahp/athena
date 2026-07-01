@@ -127,6 +127,28 @@ async def daily_briefing():
         "briefing": await container.briefing.generate_daily_briefing()
     }
 
+from app.schemas.awareness import InsightResponse
+from app.awareness.constants import BRIEFING_INSIGHT_CAPACITY
+from app.services.time_service import TimeService
+
+@app.get(
+    "/insights",
+    response_model=list[InsightResponse]
+)
+async def get_insights():
+    day = TimeService.now().date()
+    insights = container.insights.generate(day, available_capacity=BRIEFING_INSIGHT_CAPACITY)
+    
+    return [
+        InsightResponse(
+            id=i.id,
+            title=i.title,
+            description=i.description,
+            severity=i.severity.value,
+            created_at=i.created_at
+        ) for i in insights
+    ]
+
 from app.schemas.advisor import AdvisorRequest, AdvisorResponse
 from app.schemas.capacity import CapacityAdvisorRequest, CapacityAdvisorResponse
 from app.schemas.workload import WorkloadRequest, WorkloadResponse
