@@ -13,13 +13,19 @@ _PRIORITY_ORDER = {
     ResponsibilityPriority.LOW: 3,
 }
 
+from app.calendar.availability import AvailabilityEngine
+from app.planning.schedule import DailySchedule, ScheduledTask
+from datetime import date, timedelta
+
 class ExecutionPlanner:
 
     def __init__(
         self,
         responsibility_service: ResponsibilityService,
+        availability_engine: AvailabilityEngine = None
     ):
         self._responsibility_service = responsibility_service
+        self._availability_engine = availability_engine
 
     def _due_status(self, responsibility: Responsibility, now: datetime) -> int:
         if not responsibility.due_date:
@@ -147,4 +153,52 @@ class ExecutionPlanner:
             responsibilities=ordered,
             rationale=rationale,
             total_estimated_duration=total_duration,
+        )
+
+    def generate_schedule(self, day: date) -> DailySchedule | None:
+        if not self._availability_engine:
+            return None
+            
+        plan = self.generate_plan()
+        availability = self._availability_engine.calculate(day)
+        
+        scheduled_tasks = []
+        unscheduled = []
+        
+        free_blocks = [
+            {"start": b.start, "end": b.end, "remaining": b.end - b.start}
+            for b in availability.free_blocks
+        ]
+        
+        for task in plan.responsibilities:
+            if not task.estimated_duration:
+                unscheduled.append(task)
+                continue
+                
+            task_duration = timedelta(minutes=task.estimated_duration.minutes)
+            placed = False
+            
+            for block in free_blocks:
+                if block["remaining"] >= task_duration:
+                    task_start = block["start"]
+                    task_end = task_start + task_duration
+                    
+                    scheduled_tasks.append(ScheduledTask(
+                        responsibility=task,
+                        start_time=task_start,
+                        end_time=task_end
+                    ))
+                    
+                    # Update block
+                    block["start"] = task_end
+                    block["remaining"] = block["end"] - block["start"]
+                    placed = True
+                    break
+                    
+            if not placed:
+                unscheduled.append(task)
+                
+        return DailySchedule(
+            tasks=scheduled_tasks,
+            unscheduled=unscheduled
         )

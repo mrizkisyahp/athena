@@ -2,7 +2,7 @@ from datetime import datetime, date
 from app.calendar.models import Event
 from app.database.session import SessionLocal
 from app.database.models import EventORM
-from app.database.mappers import to_event_domain, to_event_orm
+import app.database.mappers as mappers
 
 class EventService:
     """
@@ -28,7 +28,7 @@ class EventService:
         )
         
         with SessionLocal() as session:
-            orm_event = to_event_orm(event)
+            orm_event = mappers.to_event_orm(event)
             session.add(orm_event)
             session.commit()
             
@@ -38,14 +38,14 @@ class EventService:
         """Returns every stored event."""
         with SessionLocal() as session:
             orm_events = session.query(EventORM).order_by(EventORM.created_at).all()
-            return [to_event_domain(orm) for orm in orm_events]
+            return [mappers.to_event_domain(orm) for orm in orm_events]
             
     def get_by_id(self, event_id: str) -> Event | None:
         """Returns a specific event by ID, or None if not found."""
         with SessionLocal() as session:
             orm_event = session.query(EventORM).filter(EventORM.id == event_id).first()
             if orm_event:
-                return to_event_domain(orm_event)
+                return mappers.to_event_domain(orm_event)
             return None
             
     def delete(self, event_id: str) -> bool:

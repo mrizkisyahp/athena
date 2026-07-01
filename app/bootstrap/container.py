@@ -36,7 +36,7 @@ class AthenaContainer:
         self.events = EventService()
         self.availability = AvailabilityEngine(self.events)
         self.memory_retriever = MemoryRetriever(self.memories)
-        self.planner = ExecutionPlanner(self.responsibilities)
+        self.planner = ExecutionPlanner(self.responsibilities, self.availability)
 
         self.briefing = BriefingService(
             responsibilities=self.responsibilities,
