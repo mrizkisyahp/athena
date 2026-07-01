@@ -335,7 +335,10 @@ Disagreements:
 Artifacts:
 - Commit
 - Files changed
-- Playground validation
+- Playground validation:
+  ```text
+  [Output of playground.py here]
+  ```
 
 Ready for Technical Lead review.
 ```

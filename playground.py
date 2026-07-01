@@ -1,20 +1,25 @@
-from devtools.models import PipelineRequest
-from devtools.engine import PipelineEngine
+from devtools.models import PipelineRun, PipelineReport
+from devtools.history import RunHistory
 
 def main():
-    engine = PipelineEngine()
+    history = RunHistory()
     
-    print("--- Scenario 1: No Database ---")
-    req1 = PipelineRequest(title="Sprint 10 (No DB)", touches_database=False)
-    run1 = engine.plan(req1)
-    for i, agent in enumerate(run1.planned_agents, 1):
-        print(f"{i}. {agent.role} ({agent.name})")
+    run1 = PipelineRun(name="Sprint 10 PR1", report=PipelineReport(stage="Done", completed=True, summary="First PR done"))
+    run2 = PipelineRun(name="Sprint 10 PR2", report=PipelineReport(stage="Done", completed=True, summary="Second PR done"))
+    
+    history.add(run1)
+    history.add(run2)
+    
+    print("--- Stored Runs ---")
+    for r in history.get_all():
+        print(r.name)
         
-    print("\n--- Scenario 2: Touches Database ---")
-    req2 = PipelineRequest(title="Sprint 10 (DB)", touches_database=True)
-    run2 = engine.plan(req2)
-    for i, agent in enumerate(run2.planned_agents, 1):
-        print(f"{i}. {agent.role} ({agent.name})")
+    print("\n--- Retrieve Run ---")
+    retrieved = history.get("Sprint 10 PR1")
+    if retrieved:
+        print(f"Found: {retrieved.name} - {retrieved.report.summary if retrieved.report else 'No report'}")
+    else:
+        print("Run not found")
 
 if __name__ == "__main__":
     main()

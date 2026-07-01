@@ -24,6 +24,12 @@ The `PipelineEngine` is strictly responsible for planning the workflow.
 - Networking is intentionally out of scope.
 - The Human Operator and Development Orchestrator (Antigravity) remain responsible for actually orchestrating and executing the planned stages.
 
+## Run History
+The pipeline remembers every execution via `RunHistory`.
+- It is in-memory today.
+- Persistence is intentionally deferred.
+- It is designed for future auditing and engineering traceability, so the pipeline can answer what happened in past PRs.
+
 ## Team Roles
 - **Technical Lead (ChatGPT):** Product vision, Architecture, Sprint planning, PR design, Acceptance criteria, Final approval, Roadmap
 - **Human Operator (Rizki):** Makes final engineering decisions, Passes work between systems

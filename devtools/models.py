@@ -25,13 +25,14 @@ class PipelineRequest:
     touches_database: bool = False
 
 @dataclass(slots=True)
-class PipelineRun:
-    name: str
-    planned_agents: list[Agent] = field(default_factory=list)
-    results: list[AgentResult] = field(default_factory=list)
-
-@dataclass(slots=True)
 class PipelineReport:
     stage: str
     completed: bool
     summary: str
+
+@dataclass(slots=True)
+class PipelineRun:
+    name: str
+    planned_agents: list[Agent] = field(default_factory=list)
+    results: list[AgentResult] = field(default_factory=list)
+    report: PipelineReport | None = None
