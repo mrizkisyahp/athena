@@ -65,6 +65,14 @@ The canonical workflow for building Athena is:
 6. **Run History** stores the executed pipeline run for auditing.
 7. **Technical Lead Review** accepts or rejects the final output.
 
+## Development Verification
+We maintain a strict and fast testing strategy:
+- `playground.py` → Experimentation and ad-hoc validation.
+- `devtools/regression_test.py` → Permanent verification suite.
+   - Uses `FakeProvider` to validate architecture offline and deterministically.
+   - Includes a single `NineRouter` smoke test to validate infrastructure integration without slowing down regression testing with full pipeline executions.
+   - Full specialist execution remains a manual integration exercise via the playground.
+
 ## Team Roles
 - **Technical Lead (ChatGPT):** Product vision, Architecture, Sprint planning, PR design, Acceptance criteria, Final approval, Roadmap
 - **Human Operator (Rizki):** Makes final engineering decisions, Passes work between systems

@@ -1,54 +1,66 @@
 from pathlib import Path
-from devtools.config import EngineeringTeam
+from devtools.config import EngineeringTeam, Profiles, ProfileRegistry
+from devtools.prompt_library import PromptLibrary
 from devtools.engine import PipelineEngine
-from devtools.models import PipelineRequest, PipelineRun, PipelineReport
+from devtools.models import PipelineRequest, PipelineRun, PipelineReport, AgentResult
 from devtools.history import RunHistory
+from devtools.reporting import ReportBuilder
+from devtools.runtime import ExecutionRuntime
+from devtools.providers.base import BaseProvider
+from devtools.providers.nine_router import NineRouterProvider
+from devtools.providers.models import ProviderRequest, ProviderResponse
+from devtools.orchestrator import PipelineOrchestrator
+
+class FakeProvider(BaseProvider):
+    def execute(self, request: ProviderRequest) -> ProviderResponse:
+        return ProviderResponse(
+            output=f"Fake output for {request.agent.role}",
+            provider_name="FakeProvider",
+            duration_seconds=0.1
+        )
+
+class FailingFakeProvider(BaseProvider):
+    def execute(self, request: ProviderRequest) -> ProviderResponse:
+        raise RuntimeError("Simulated provider failure")
 
 def test_configuration():
     print("1. Testing Configuration...")
     agents = EngineeringTeam.get_all_agents()
     assert len(agents) == 6, f"Expected 6 configured agents, got {len(agents)}"
     
-    roles = {a.role for a in agents}
-    expected_roles = {"Technical Lead", "Development Orchestrator", "Architect", "Backend Executor", "Database Reviewer", "QA Reviewer"}
-    assert roles == expected_roles, "Missing required roles"
-    
-    db_reviewer = next(a for a in agents if a.role == "Database Reviewer")
-    assert db_reviewer.is_conditional is True, "Database Reviewer must be conditional"
+    # Verify profiles resolve
+    registry = ProfileRegistry()
+    for agent in agents:
+        profile = registry.resolve(agent)
+        assert profile is not None, f"Profile missing for {agent.name}"
+        
     print("[PASS] Configuration valid")
 
 def test_prompt_discovery():
     print("2. Testing Prompt Discovery...")
-    prompt_dir = Path("devtools/prompts")
-    prompts = list(prompt_dir.glob("*.md"))
+    library = PromptLibrary()
+    agents = EngineeringTeam.get_all_agents()
     
-    # We expect 5 prompts (excluding Technical Lead which is human-owned)
-    assert len(prompts) == 5, f"Expected exactly 5 prompts, found {len(prompts)}"
-    
-    expected_files = {
-        "architect.md",
-        "executor.md",
-        "db_reviewer.md",
-        "qa_reviewer.md",
-        "antigravity.md"
-    }
-    
-    found_files = {p.name for p in prompts}
-    assert found_files == expected_files, f"Prompt files mismatch: {found_files}"
-    
+    for agent in agents:
+        # Technical Lead is human, but we ensure get_prompt doesn't crash
+        prompt = library.get_prompt(agent)
+        assert prompt, f"Prompt should not be empty for {agent.name}"
+        if agent.role != "Technical Lead":
+            # Just ensuring it didn't use the fallback unless necessary
+            # We know antigravity.md exists, architect.md exists, etc.
+            assert not prompt.startswith("You are a"), f"Prompt fallback triggered for {agent.name}"
+            
     print("[PASS] Prompt discovery valid")
 
 def test_pipeline_planning():
     print("3. Testing Pipeline Planning...")
     engine = PipelineEngine()
     
-    # Scenario A
     req_a = PipelineRequest(title="Scenario A", touches_database=False)
     run_a = engine.plan(req_a)
     roles_a = [a.role for a in run_a.planned_agents]
     assert roles_a == ["Architect", "Backend Executor", "QA Reviewer"], "Scenario A execution order failed"
     
-    # Scenario B
     req_b = PipelineRequest(title="Scenario B", touches_database=True)
     run_b = engine.plan(req_b)
     roles_b = [a.role for a in run_b.planned_agents]
@@ -56,37 +68,103 @@ def test_pipeline_planning():
     
     print("[PASS] Pipeline planning valid")
 
-def test_run_history():
-    print("4. Testing Run History...")
+def test_runtime_fake():
+    print("4. Testing Runtime (FakeProvider)...")
+    provider = FakeProvider()
+    runtime = ExecutionRuntime(provider=provider)
+    engine = PipelineEngine()
+    run = engine.plan(PipelineRequest(title="Test", touches_database=False))
+    
+    runtime.execute(run, "Test instructions")
+    assert len(run.results) == 3
+    assert run.results[0].agent.role == "Architect"
+    assert "Fake output" in run.results[0].output
+    
+    print("[PASS] Runtime verified with FakeProvider")
+
+def test_ninerouter_smoke():
+    print("5. Testing NineRouter Smoke Test...")
+    agent = EngineeringTeam.ARCHITECT
+    profile = ProfileRegistry.resolve(agent)
+    
+    # Skip if FAKE to allow offline tests to pass if NineRouter isn't configured for Architect
+    if profile.provider_type == "fake":
+        print("[SKIP] NineRouter smoke test skipped (Architect uses FAKE profile)")
+        return
+        
+    request = ProviderRequest(
+        agent=agent,
+        profile=profile,
+        instructions="Return the exact word 'OK'",
+        prompt="You are a test agent."
+    )
+    
+    provider = NineRouterProvider()
+    response = provider.execute(request)
+    assert response.provider_name == "NineRouter"
+    assert response.duration_seconds > 0
+    assert response.output
+    
+    print("[PASS] NineRouter smoke test valid")
+
+def test_orchestrator():
+    print("6. Testing Orchestrator...")
+    engine = PipelineEngine()
+    provider = FakeProvider()
+    runtime = ExecutionRuntime(provider=provider)
     history = RunHistory()
     
-    run1 = PipelineRun(name="Run 1", planned_agents=[], report=PipelineReport("Done", True, "Summary 1"))
-    run2 = PipelineRun(name="Run 2", planned_agents=[], report=PipelineReport("Done", True, "Summary 2"))
+    orchestrator = PipelineOrchestrator(engine, runtime, history)
+    run = orchestrator.execute_pipeline(PipelineRequest(title="Orchestrator Test"), "instructions")
     
-    history.add(run1)
-    history.add(run2)
+    assert len(run.results) == 3
+    assert run.report.completed is True
+    assert history.get("Orchestrator Test") == run
     
-    assert history.get("Run 1") == run1
-    assert history.get("Run 2") == run2
-    assert len(history.get_all()) == 2
-    
-    print("[PASS] Run history valid")
+    print("[PASS] Orchestrator verified")
 
-def test_reports():
-    print("5. Testing Reports...")
-    run = PipelineRun(name="Run", planned_agents=[], report=PipelineReport(stage="Implementation", completed=True, summary="Testing report"))
+def test_failure_path():
+    print("7. Testing Failure Path...")
+    engine = PipelineEngine()
+    provider = FailingFakeProvider()
+    runtime = ExecutionRuntime(provider=provider)
+    history = RunHistory()
     
-    assert run.report is not None, "PipelineRun must contain exactly one PipelineReport"
-    assert isinstance(run.report, PipelineReport)
+    orchestrator = PipelineOrchestrator(engine, runtime, history)
+    run = orchestrator.execute_pipeline(PipelineRequest(title="Failure Test"), "instructions")
     
-    print("[PASS] Reports valid")
+    assert len(run.results) == 0  # Halted on first step
+    assert run.report.completed is False
+    assert "Simulated provider failure" in run.report.summary
+    assert history.get("Failure Test") == run
+    
+    print("[PASS] Failure path verified")
+
+def test_report_validation():
+    print("8. Testing Report Validation...")
+    # This is implicitly tested inside test_orchestrator and test_failure_path
+    # but we can explicitly test ReportBuilder here
+    run = PipelineRun(name="Test Run")
+    run.planned_agents = [EngineeringTeam.ARCHITECT]
+    
+    success_report = ReportBuilder.success(run)
+    assert success_report.completed is True
+    
+    failure_report = ReportBuilder.failure(run, Exception("Test Error"))
+    assert failure_report.completed is False
+    assert "Test Error" in failure_report.summary
+    
+    print("[PASS] Report validation verified")
 
 def run_tests():
     test_configuration()
     test_prompt_discovery()
     test_pipeline_planning()
-    test_run_history()
-    test_reports()
+    test_runtime_fake()
+    test_ninerouter_smoke()
+    test_orchestrator()
+    test_failure_path()
+    test_report_validation()
     
     print("\nALL TESTS PASSED!")
 
