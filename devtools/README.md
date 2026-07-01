@@ -13,6 +13,10 @@ This directory (`devtools/`) contains the infrastructure that powers Athena's AI
 The `devtools/` package is strictly separated from the main Athena application (`app/`).
 **CRITICAL RULE:** Deleting the entire `devtools/` directory must NEVER affect Athena's runtime, APIs, domain model, or production behavior.
 
+## Prompt Library
+Prompts are version-controlled engineering assets. They are treated as source code, not documentation or logic.
+Changes to prompts should be reviewed and merged just like any other implementation change to the codebase. Each prompt defines the strict persona, inputs, and boundaries for an agent in the AI Engineering Pipeline.
+
 ## Team Roles
 - **Technical Lead (ChatGPT):** Product vision, Architecture, Sprint planning, PR design, Acceptance criteria, Final approval, Roadmap
 - **Human Operator (Rizki):** Makes final engineering decisions, Passes work between systems
