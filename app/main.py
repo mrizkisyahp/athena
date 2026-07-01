@@ -129,6 +129,25 @@ async def daily_briefing():
 
 from app.schemas.advisor import AdvisorRequest, AdvisorResponse
 from app.schemas.capacity import CapacityAdvisorRequest, CapacityAdvisorResponse
+from app.schemas.workload import WorkloadRequest, WorkloadResponse
+
+@app.post(
+    "/workload",
+    response_model=WorkloadResponse,
+)
+async def workload(
+    request: WorkloadRequest,
+):
+    try:
+        cap = Duration(request.available_minutes)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+        
+    recommendation = await container.workload_service.analyze_workload(cap)
+
+    return WorkloadResponse(
+        recommendation=recommendation
+    )
 
 @app.post(
     "/advisor",

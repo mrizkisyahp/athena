@@ -60,6 +60,16 @@ class AthenaContainer:
             self.communication,
             self.responsibilities
         )
+        
+        from app.workload.service import WorkloadBalancer
+        from app.workload.workload_service import WorkloadService
+        
+        self.workload_balancer = WorkloadBalancer(self.planner)
+        self.workload_service = WorkloadService(
+            balancer=self.workload_balancer,
+            llm=self.llm,
+            prompts=self.prompt_service,
+        )
 
 
 container = AthenaContainer()
