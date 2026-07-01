@@ -59,12 +59,16 @@ Completed today:
             insights = self._insight_engine.generate(day, BRIEFING_INSIGHT_CAPACITY)
             insight_context = InsightPromptBuilder.build(insights)
 
-        user_prompt = f"""
-Generate today's briefing.
+        from app.services.briefing_formatter import BriefingFormatter
+        formatted_sections = BriefingFormatter.build(
+            context,
+            memory_context,
+            insight_context
+        )
 
-{context}
-{memory_context}
-{insight_context}"""
+        user_prompt = f"""Generate today's briefing.
+
+{formatted_sections}"""
 
         request = ChatRequest(
             messages=[
